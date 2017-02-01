@@ -1,0 +1,139 @@
+---
+title: "MedicarePartD"
+author: "Christine Iyer"
+date: "January 31, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(dplyr)
+library(knitr)
+```
+
+
+```{r}
+MedicareD <- read.csv("PartD.csv", header = TRUE, stringsAsFactors = FALSE, skip = 3)
+kable(head(MedicareD))
+names(MedicareD)
+UnitCost <- MedicareD %>% select(Brand.Name, Generic.Name, Total.Annual.Spending.Per.User..2011, X.Total.Annual.Spending.Per.User..2012., X.Total.Annual.Spending.Per.User..2013., X.Total.Annual.Spending.Per.User..2014., X.Total.Annual.Spending.Per.User..2015.) 
+
+#MedicareD$X.Total.Spending..2011. <- paste("$"), format(MedicareD$X.Total.Spending..2011., big.mark = ","), sep = ",", round(MedicareD$X.Total.Spending..2011., digits = 2))
+
+
+#Beneficiary.Count.LIS = Beneficiary.Count.LIS..2011, Average.Beneficiary.Cost.Share.LIS = X.Average.Beneficiary.Cost.Share.LIS..2011.#, Beneficiary.Count..2011, Unit.Cost = Unit.Count..2011, Av.Cost.Per.User = X.Average.Cost.Per.Unit..Weighted...2011., Beneficiary.Cost =  
+                                       
+#names(MedicareD) <- c("Brand.Name", "Generic.Name", 
+#head(MedicareD2011)
+#dim(MedicareD)
+names <- c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+MedicareD2011 <- MedicareD %>% select(Brand.Name:Average.Beneficiary.Cost.Share.LIS..2011)
+head(MedicareD2011)
+MedicareD2011["Year"] <- NA
+MedicareD2011$Year <- rep("2011", length(MedicareD2011))
+#list2 <- rep("2009-01-01",length(list1))
+#list3 <- cbind(list2, list1)
+
+colnames(MedicareD2011) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2011)
+names(MedicareD)
+dim(MedicareD2011)
+#Unit
+
+```
+
+
+
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+colnames(UnitCost) <- c("Brand", "Generic", "2011", "2012", "2013", "2014", "2015")
+
+```
+
+
+
+
+
+```{r}
+MedicareD2012 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2012:X.Average.Beneficiary.Cost.Share.LIS..2012.)
+MedicareD2012["Year"] <- NA
+MedicareD2012$Year <- rep("2012", length(MedicareD2012))
+colnames(MedicareD2012) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2012)
+dim(MedicareD2012)
+```
+
+```{r}
+MedicareD2013 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2013:X.Average.Beneficiary.Cost.Share.LIS..2013.)
+MedicareD2013["Year"] <- NA
+MedicareD2013$Year <- rep("2013", length(MedicareD2013))
+colnames(MedicareD2013) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2013)
+dim(MedicareD2013)
+```
+
+
+
+```{r}
+MedicareD2014 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2014:X.Average.Beneficiary.Cost.Share.LIS..2014.)
+MedicareD2014["Year"] <- NA
+MedicareD2014$Year <- rep("2014", length(MedicareD2014))
+colnames(MedicareD2014) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2014)
+dim(MedicareD2014)
+```
+
+
+
+```{r}
+MedicareD2015 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2015:X.Average.Beneficiary.Cost.Share.LIS..2015.)
+MedicareD2015["Year"] <- NA
+MedicareD2015$Year <- rep("2015", length(MedicareD2015))
+colnames(MedicareD2015) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2015)
+dim(MedicareD2015)
+```
+```{r}
+MedicareD2012 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2012:X.Average.Beneficiary.Cost.Share.LIS..2012.)
+MedicareD2012["Year"] <- NA
+MedicareD2012$Year <- rep("2012", length(MedicareD2012))
+colnames(MedicareD2012) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2012)
+dim(MedicareD2012)
+```
+
+```{r}
+MedicareD2013 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2013:X.Average.Beneficiary.Cost.Share.LIS..2013.)
+MedicareD2013["Year"] <- NA
+MedicareD2013$Year <- rep("2013", length(MedicareD2013))
+colnames(MedicareD2013) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2013)
+dim(MedicareD2013)
+```
+
+
+
+```{r}
+MedicareD2014 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2014:X.Average.Beneficiary.Cost.Share.LIS..2014.)
+MedicareD2014["Year"] <- NA
+MedicareD2014$Year <- rep("2014", length(MedicareD2014))
+colnames(MedicareD2014) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+head(MedicareD2014)
+dim(MedicareD2014)
+```
+
+
+#2015
+```{r}
+MedicareD2015 <- MedicareD %>% select(Brand.Name, Generic.Name, Claim.Count..2015:X.Average.Beneficiary.Cost.Share.LIS..2015.)
+MedicareD2015["Year"] <- NA
+MedicareD2015$Year <- rep("2015", length(MedicareD2015))
+colnames(MedicareD2015) <-  c("Brand", "Generic", "Claim Count", "Total Spendimg", "Beneficiary Count", "Total Annual Spending per User", "Unit Count", "Average Cost per Unit", "Beneficiary Count, No LIS", "Average Beneficiary Cost Share, No LIS", "Beneficiary Count, LIS", "Average Beneficiary Cost Share, LIS", "Year")
+kable(head(MedicareD2015, n = 15))
+kable(head(UnitCost, n = 25))
+```
