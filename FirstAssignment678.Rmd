@@ -1,0 +1,201 @@
+---
+title: "First Assignment"
+author: "Christine Iyer"
+date: "February 5, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(knitr)
+library(forecast)
+library(ggvis)
+library(lubridate)
+library(dplyr)
+```
+
+##Chapter 2 Quiz: due Monday, February 6th - covers chapter 2 of the textbook
+
+##Chapter 1, Problems 1 - 5
+
+**1. Is the goal of this study descriptive or predictive?**
+
+The question states that the purpose of the study was to provide a greater understanding about long distance travel behavior before and after the 9/11 attacks and to asses the impact of the events,  I would therefore have to conclude that the goal is a descriptive analysis. 
+
+There is a predictive element in this study insofar as part of the impact analysis involved forecasting. The pre 9/11 data was used to forecast post-9/11 and this forcast was compared to the actual data. 
+
+
+**2. What is the forecast horizon to consider in this task? Are next-month forecasts sufficient?**
+
+Because the goal is to understand the impact of the 9/11 terrorist events, next month forecasts would not be sufficient. I would hypothesize that there would be both short and long term ramifications of such an event, therefore next month forecasts would provide an incomplete picture. Because long distance travel has a great deal of seasonal variability, it would be important to try and assess the impact over a longer horizon. Refreshing the forecast based on recent data as it comes in would also be important. Perhaps trends of increasing or decreasing long distance travel would emerge. Finally, for were this data provided for forecasting, a next-month forecast would be insufficient because of the seasonality of travel and the necessity of longer term planning for such an costly business. 
+
+**3. What level of automation does this forecasting task require? Consider the four questions related to automation.**
+
+For this descriptive study, a high level of automation is not necessary. Patterns, trends, and a high level assessment of the impact of the terrorist events on travel can be gleaned from crude time series plots. The data we are given is monthly so there is a manageable amount of data to perform the analysis. Additionally, because this is a one time study with a fixed and finite amount of data, a low level of automation is all that is necessary. 
+
+
+**4. What is the meaning of t = 1, 2, 3 in the Air series? Which time period does t = 1 refer to?**
+It is the notation used for indexing the time period of interest. In the Air series,  t = 1 refers to Jan-90, the first date in the series. 
+
+
+
+
+**5. What are the values for y1, y2, and y3 in the Air series?**
+The y values are the variable measurements over the noted time period. Thereore $y_{1}$ refers to the variable measurements in the first time period. For:
+
+air travel $y_{1} = 35153577  RPM (000s)$
+
+rail travel $y_{2} = 32965187 RPM (000s)$
+
+vehicle travel $y_{3} = 39993913 RPM (000s)$
+
+##Chapter 2, Problems 1, 3, and 6 (p. 42 - 44)
+
+
+```{r}
+travel <- read.csv("travel911.csv", header = TRUE, stringsAsFactors = FALSE)
+revisedtravel <- read.csv("Sept11Travel.csv", header = TRUE, stringsAsFactors = FALSE)
+#kable(head(travel))
+names(travel)[1:4] <- c("month_yr", "air.miles", "rail.miles", "car.miles.in.billions")
+
+```
+
+
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# air.travel.ts <- ts(travel$air.miles, start = c(1990, 1), end = c(2001, 8), frequency = 12)
+# plot(air.travel.ts, xlab = "Year", ylab = "Airline Revenue Passenger Miles", type = "l",  bty = "l",  main = "Airline Revenue Passenger Miles")
+# str((air.travel.ts))
+# kable(travel)
+# 
+# #are there any NA and if so where?
+# NAS <- sum(is.na(travel))
+# NAS
+
+```
+
+
+1. Plot each of the three pre-event time series (Air, Rail, Car). 
+
+
+```{r}
+revisedtravel <- revisedtravel %>% mutate(logAir = log(Air), logRail = log(Rail), logCar = log(VMT))
+kable(head(revisedtravel))
+logAir.ts <- ts(revisedtravel$logAir,  start = c(1990, 1), end = c(2001, 8), frequency = 12)
+logAir.plot <- plot(logAir.ts, ylab = "log Air Passenger Miles", type="l", bty="l",  main = "Airline Revenue Passenger Miles before 9/11 Terrorist Attacks")
+  logRail.ts <- ts(revisedtravel$logRail,  start = c(1990, 1), end = c(2001, 8), frequency = 12)
+  logRail.plot <- plot(logRail.ts, ylab = "log Rail Passenger Miles", type="l", bty="l", main = "Rail Passenger Miles before 9/11 Terrorist Attacks")
+  logCar.ts <- ts(revisedtravel$logCar,  start = c(1990, 1), end = c(2001, 8), frequency = 12)
+  logCar.plot <- plot(logCar.ts, ylab = "log Car Passenger Miles", type="l", bty="l", main = "Monthly Car Miles Travelled before 9/11 Terrorist Attacks")
+```
+
+
+
+```{r Air, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+
+air.travel.ts <- ts(travel$air.miles, start = c(1990, 1), end = c(2001, 8), frequency = 12)
+# airplot <- plot(air.travel.ts, xlab = "Year", ylab = "Airline Revenue Passenger Miles", ylim = c(29000000, 80000000), type = "l",  bty = "l",  main = "Airline Revenue Passenger Miles before 9/11 Terrorist Attacks")
+rail.travel.ts <-ts(travel$rail.miles, start = c(1990, 1), end = c(2001, 8), frequency = 12)
+# head(rail.travel.ts)
+# rail.plot <- plot(rail.travel.ts, xlab = "Year", ylab = "Rail Passenger Miles", type = "l",  bty = "l",  main = "Rail Passenger Miles before 9/11 Terrorist Attacks")
+auto.travel.ts <-ts(travel$car.miles.in.billions, start = c(1990, 1), end = c(2001, 8), frequency = 12)
+# head(auto.travel.ts)
+# car.plot <- plot(auto.travel.ts, xlab = "Year", ylab = "Car Miles (in billions", type = "l",  bty = "l",  main = "Monthly Car Miles Travelled before 9/11 Terrorist Attacks")
+
+```
+
+
+**(a) What time series components appear from the plot? (b) What type of trend appears? Change the scale of the series, add trend lines, and suppress seasonality to better visualize the trend pattern. **
+
+Air Plot: An upward, linear trend and seasonality. This linear trend is exhibited in plots with trend lines and in plots where the seasonality is suppressed. Seasonality is evident when zooming and in the season plots. 
+
+
+```{r}
+airlinear <- tslm(logAir.ts  ~ trend)
+plot(logAir.ts, xlab = "Year", ylab = "log Airline Revenue Passenger Miles", bty = "l", main = "Trend: Air Revenue Passenger Miles")
+lines(airlinear$fitted, lwd=2)
+quarterlyAir <- aggregate(logAir.ts, nfrequency=4, FUN=sum)
+plot(quarterlyAir, xlab = "Year", ylab = "log Air Passenger Miles",bty="l", main = "Air Miles by Quarter:Seasonality Suppressed")
+yearlyAir <- aggregate(logAir.ts, nfrequency=1, FUN=sum)
+plot(yearlyAir, xlab = "Year", ylab = "log Air Passenger Miles",bty="l", main = "Air Miles Yearly:Seasonality Suppressed")
+air.ts.zoom <- window(logAir.ts, start = c(1999, 1), end = c(2000, 12))
+plot(air.ts.zoom, xlab = "Year", ylab = "log Airline Revenue Passenger Miles", bty = "l", main = "Zoom: Air Revenue Passenger Miles")
+ggseasonplot(logAir.ts, col =rainbow(12), year.labels=TRUE, ylab = "log Air Passenger Revenue Miles", main = "Seasonal Plot for Air Passenger Revenue")
+```
+
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+airlinear <- tslm(logAir.ts  ~ trend)
+plot(logAir.ts, xlab = "Year", ylab = "log Airline Revenue Passenger Miles", bty = "l", main = "Trend: Air Revenue Passenger Miles")
+#lines(airlinear$fitted, lwd=2)
+
+ggseasonplot(logAir.ts, col =rainbow(12), year.labels=TRUE, ylab = "log Air Passenger Revenue Miles", main = "Season Plot for Air Miles")
+air.ts.zoom <- window(logAir.ts, start = c(1999, 1), end = c(2000, 12))
+plot(air.ts.zoom, xlab = "Year", ylab = "log Airline Revenue Passenger Miles", bty = "l", main = "Zoom: Air Revenue Passenger Miles")
+```
+ 
+Rail Plot: shows a downward trend and seasonality. A combination of time series visualizations demonstrates these components. 
+
+```{r}
+rail.ts <- ts(revisedtravel$Rail, start = c(1990, 1), end = c(2001, 8), frequency = 12)
+trainlinear <- tslm(logRail.ts ~ trend)
+plot(logRail.ts, xlab = "Year", ylab = "log Rail Passenger Miles", bty = "l", main = "Trend: Rail Passenger Miles")
+lines(trainlinear$fitted, lwd = 2)
+#Quarterly rail
+quarterlyRail <- aggregate(logRail.ts, nfrequency=4, FUN=sum)
+plot(quarterlyRail, xlab = "Year", ylab = "log Rail Passenger Miles", bty="l", main = "Rail Miles by Quarter:Seasonality Suppressed")
+#Yearly rail
+yearlyRail <- aggregate(logRail.ts, nfrequency=1, FUN=sum)
+plot(yearlyRail, xlab = "Year", ylab = "log Car Passenger Miles (in billions)",bty="l", main = "Rail Miles by Year:Seasonality Suppressed")
+ggseasonplot(logRail.ts, col =rainbow(12), year.labels=TRUE, ylab = "log Rail Passenger Revenue Miles", main = "Season Plot for Rail Miles Travelled")
+rail.ts.zoom <- window(logRail.ts, start = c(1998, 1), end = c(2000, 12))
+plot(rail.ts.zoom, xlab = "Year", ylab = "log Rail Passenger Miles", bty = "l", main = "Zoom: Rail Passenger Miles")
+```
+
+Car Plot: shows an upward trend and seasonality. Again, a combination of time series visualizations demonstrates these components. 
+```{r}
+carlinear <- tslm(logCar.ts ~ trend)
+plot(logCar.ts, xlab = "Year", ylab = "log Car Passenger Miles (in billions)", bty = "l", main = "Trend: Car Passenger Miles")
+lines(carlinear$fitted, lwd = 2)
+#Quarterly car
+quarterlyAuto <- aggregate(logCar.ts, nfrequency=4, FUN=sum)
+plot(quarterlyAuto, xlab = "Year", ylab = "log Car Passenger Miles(in billions)",main = "Quarterly Auto: Seasonality Suppressed", bty="l")
+yearlyAuto <- aggregate(logCar.ts, nfrequency=1, FUN=sum)
+plot(yearlyAuto, xlab = "Year", ylab = "log Car Passenger Miles(in billions)", main = "Yearly Auto:Seasonality Suppressed",  bty="l")
+ggseasonplot(logCar.ts, col =rainbow(12), year.labels=TRUE, ylab = "log Car Passenger Miles")
+car.ts.zoom <- window(logCar.ts, start = c(1998, 1), end = c(2000, 12))
+plot(rail.ts.zoom, xlab = "Year", ylab = "log Car Passenger Miles (in billions)", bty = "l", main = "Zoom: Car Passenger Miles")
+```
+
+
+
+
+
+3. Shipments of Household Appliances: The file ApplianceShipments.xls contains the series of quarterly shipments (in millions of USD) of U.S. household appliances between 1985- 1989. 6 6 Data courtesy of Ken Black (a) Create a well-formatted time plot of the data. (b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series?
+
+
+
+```{r}
+Appliance <- read.csv("ApplianceShipments.csv")
+head(Appliance)
+```
+
+6. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a 3-year period.9 9 Source: R. J. Hyndman Time Series Data Library, http://data.is/TSDLdemo; accessed on Mar 28, 2016 (a) Create a well-formatted time plot of the data. (b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series? (c) Do you expect to see seasonality in sales of shampoo? Why?
+
+```{r}
+Shampoo <- read.csv("ShampooSales.csv")
+head(Shampoo)
+```
+
+
+[Data set for 6](http://data.is/TSDLdemo)
+
+
+
