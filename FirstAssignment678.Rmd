@@ -110,6 +110,12 @@ auto.travel.ts <-ts(travel$car.miles.in.billions, start = c(1990, 1), end = c(20
 # head(auto.travel.ts)
 # car.plot <- plot(auto.travel.ts, xlab = "Year", ylab = "Car Miles (in billions", type = "l",  bty = "l",  main = "Monthly Car Miles Travelled before 9/11 Terrorist Attacks")
 
+Air <- ets(air.travel.ts)
+Train <- ets(rail.travel.ts)
+Car <- ets(auto.travel.ts)
+plot(Air)
+plot(Train)
+plot(Car)
 ```
 
 
@@ -214,8 +220,16 @@ plot(zoo.appliance.ts, col="blue", lty=1, lwd=2, xlab = "Year", ylab = "Applianc
 ###Plot with trend
 ```{r}
 plot(zoo.appliance.ts, col="blue", lty=1, lwd=2, xlab = "Year", ylab = "Appliance Shipments", main = "Quarterly Appliance Shipments 1985-1987")
-lines(shipmentlinear$fitted, lwd = 2)
-lines(shipmentQuad$fitted, lty=2, lwd=3)
+par(mfrow = c(2, 1))
+fit <- stl(appliance.ts, s.window = 5,  t.window=15
+           )
+plot(fit)
+etx <- ets(appliance.ts)
+plot(etx)
+
+
+# lines(shipmentlinear$fitted, lwd = 2)
+# lines(shipmentQuad$fitted, lty=2, lwd=3)
 
 ```
 
