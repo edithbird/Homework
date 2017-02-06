@@ -19,6 +19,7 @@ library(forecast)
 library(ggvis)
 library(lubridate)
 library(dplyr)
+library(zoo)
 ```
 
 ##Chapter 2 Quiz: due Monday, February 6th - covers chapter 2 of the textbook
@@ -117,7 +118,7 @@ auto.travel.ts <-ts(travel$car.miles.in.billions, start = c(1990, 1), end = c(20
 Air Plot: An upward, linear trend and seasonality. This linear trend is exhibited in plots with trend lines and in plots where the seasonality is suppressed. Seasonality is evident when zooming and in the season plots. 
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 airlinear <- tslm(logAir.ts  ~ trend)
 plot(logAir.ts, xlab = "Year", ylab = "log Airline Revenue Passenger Miles", bty = "l", main = "Trend: Air Revenue Passenger Miles")
 lines(airlinear$fitted, lwd=2)
@@ -178,14 +179,99 @@ plot(rail.ts.zoom, xlab = "Year", ylab = "log Car Passenger Miles (in billions)"
 
 
 
-3. Shipments of Household Appliances: The file ApplianceShipments.xls contains the series of quarterly shipments (in millions of USD) of U.S. household appliances between 1985- 1989. 6 6 Data courtesy of Ken Black (a) Create a well-formatted time plot of the data. (b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series?
+3. Shipments of Household Appliances: The file ApplianceShipments.xls contains the series of quarterly shipments (in millions of USD) of U.S. household appliances between 1985- 1989. 6 6 Data courtesy of Ken Black (b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series?
 
 
 
 ```{r}
-Appliance <- read.csv("ApplianceShipments.csv")
-head(Appliance)
+#read data
+Appliance <- read.csv("ApplianceShipments.csv", header = TRUE)
+#convert to ts
+appliance.ts. <- ts(Appliance$Shipments, start = c(1985,1), frequency = 4)
+appliance.ts <- ts(Appliance$Shipments, start = 1985, frequency = 4)
+#zoo ts for better delineation of quarters
+zoo.appliance.ts <- zooreg(Appliance$Shipments, start = as.yearqtr("1985-1"), frequency = 4)
+#zoo zoom
+ZAp_ts <- window(zoo.appliance.ts, start = as.yearqtr("1985-1"), end = as.yearqtr("1987-4"))
+#reg zoom
+appliance.zoom <- window(appliance.ts., start = c(1985,1), end = c(1987, 4))
+#aggregate
+YearlyAppliance <- aggregate(appliance.ts, nfrequency = 1, FUN = sum)
+#trendlines
+shipmentlinear <- tslm(appliance.ts ~ trend)
+shipmentQuad <- tslm(appliance.ts ~ trend + I(trend^2))
 ```
+
+**(a) Create a well-formatted time plot of the data.**
+
+```{r}
+plot(zoo.appliance.ts, col="blue", lty=1, lwd=2, xlab = "Year", ylab = "Appliance Shipments in millions of US $", main = "Quarterly Appliance Shipments")
+```
+
+**(b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series?**
+
+
+###Plot with trend
+```{r}
+plot(zoo.appliance.ts, col="blue", lty=1, lwd=2, xlab = "Year", ylab = "Appliance Shipments", main = "Quarterly Appliance Shipments 1985-1987")
+lines(shipmentlinear$fitted, lwd = 2)
+lines(shipmentQuad$fitted, lty=2, lwd=3)
+
+```
+
+
+###Plot zoom
+```{r}
+plot(appliance.zoom, xlab = "Time", ylab = "Appliance Sales", bty = "l", main = "Zoom Sales")
+```
+
+
+###Plot aggregate
+```{r}
+plot(YearlyAppliance, col="blue", bty="l")
+```
+
+
+### Seasonal Plot
+```{r, echo=TRUE}
+ggseasonplot(appliance.ts, col =rainbow(12), year.labels=TRUE, ylab = "Shipments", main = "Seasonal Patterns in Appliance Shipments")
+```
+
+
+
+```{r, eval=FALSE, include=FALSE}
+plot(appliance.ts., col="blue", lwd=2, ylab="Appliance Shipments",main="Quarterly Appliance Shipments") 
+
+
+plot(appliance.zoom, xlab = "Time", ylab = "Appliance Sales", bty = "l", main = "Zoom Sales")
+plot(appliance.ts, col="blue", lwd=2, ylab="Appliance Shipments",main="Quarterly Appliance Shipments")
+lines(shipmentlinear$fitted, lwd = 2)
+lines(shipmentQuad$fitted, lty=2, lwd=3)
+#summary(shipmentQuad)
+#Suppress Seasonality
+
+
+
+#ZOO PLOTS
+
+
+plot(ZAp_ts, col="blue", lty=1, lwd=2, xlab = "Year", ylab = "Appliance Shipments", main = "Quarterly Appliance Shipments 1985-1987" )
+
+
+
+
+#seasonality?
+
+
+```
+
+
+
+
+
+
+
+
 
 6. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a 3-year period.9 9 Source: R. J. Hyndman Time Series Data Library, http://data.is/TSDLdemo; accessed on Mar 28, 2016 (a) Create a well-formatted time plot of the data. (b) Which of the four components (level, trend, seasonality, noise) seem to be present in this series? (c) Do you expect to see seasonality in sales of shampoo? Why?
 
