@@ -226,7 +226,7 @@ There is an upward **linear trend** which is evident from the yearly plot and th
 plot(appliance.ts, col="blue", #lty=1, lwd=2, 
      xlab = "Year", ylab = "Appliance Shipments",  ylim = c(3800, 5000), #pch = 20, type = "b", 
      main = "Quarterly Appliance Shipments 1985-1987 with trend lines")
-par(mfrow = c(2, 1))
+#par(mfrow = c(2, 1))
 lines(shipmentlinear$fitted, lwd = 2)
 lines(shipmentQuad$fitted, lty=2, lwd=3)
 
@@ -285,7 +285,45 @@ Shampoo.Zoo <- zooreg(Shampoo$Shampoo.Sales, start = as.yearmon("Jan2007", "%b%Y
 
 ```
 
+Rearranging Data for Appliance
 
+```{r}
+library(dplyr)
+Appliance2 <-read.csv("ApplianceShipments1.csv", stringsAsFactors = FALSE)
+str(Appliance2)
+#get rid of extraneous columns
+Appliance2 <- Appliance2[,-c(3:4)]
+head(Appliance2)
+#split up the first column
+col1Split <- strsplit(Appliance2$Quarter, "-")
+head(col1Split)
+#notice it's a matrix
+str(col1Split)
+#join the new columns to the Appliance 2 data frame
+newApp_df <- data.frame(matrix(unlist(col1Split), nrow = length(col1Split), byrow = T), Appliance2$Shipments)
+head(newApp_df)
+#reorder by year, then quarter
+newApp_df <- newApp_df[order(newApp_df$X2, newApp_df$X1),]
+head(newApp_df)
+#put the columns back together
+AppliancesFixed <- paste(newApp_df$X1, "-", newApp_df$X2)
+head(AppliancesFixed)
+#join dates with reordered shipments
+ApplianceShipments <- data.frame(AppliancesFixed, newApp_df$Appliance2.Shipments)
+head(ApplianceShipments)
+#rename columns
+names(ApplianceShipments)[1] <- "Quarter"
+names(ApplianceShipments)[2] <- "Shipments"
+head(ApplianceShipments)
+ApplianceShipments.ts <- ts(ApplianceShipments$Shipments, start = c(1985,1), end = c(1989, 4), frequency = 4)
+
+library(forecast)
+shipmentlinear <- tslm(ApplianceShipments.ts ~ trend)
+shipmentQuad <- tslm(ApplianceShipments.ts ~ trend + I(trend^2))
+
+plot(ApplianceShipments.ts, bty="l", xlab="Year", ylab="Appliance Shipments (millions $US)", las = 1)
+lines(shipmentlinear$fitted, lwd = 2)
+```
 
 
 
