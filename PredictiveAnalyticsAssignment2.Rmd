@@ -1,0 +1,144 @@
+---
+title: "Predictive Analytics Assignment 2"
+author: "Christine Iyer"
+date: "February 8, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Souvenir Sales: The file SouvenirSales.xls contains monthly sales for a souvenir shop at a beach resort town in Queensland, Australia, between 1995 and 2001. Back in 2001, the store wanted to use the data to forecast sales for the next 12 months (year 2002). They hired an analyst to generate forecasts. The analyst first partitioned the data into training and validation periods, **with the validation period containing the last 12 months of data (year 2001)**. She then fit a forecasting model to sales, using the training period. Partition the data into the training and validation periods as explained above. 
+
+```{r}
+library(knitr)
+library(forecast)
+souvenir <- read.csv("SouvenirSales.csv", header = T, stringsAsFactors = F)
+souvenir <- souvenir[, -c(3:4)]
+str(souvenir)
+head(souvenir)
+souvenir.ts <- ts(souvenir$Sales, start = c(1995, 1), frequency = 12)
+is.ts(souvenir.ts)
+#find number of NA
+sum(is.na(souvenir$Sales))
+dim(souvenir.ts)
+min(souvenir$Sales)
+
+plot(souvenir.ts, ylab = "Souvenir Sales", type="l", bty="l", main = "Souvenir Sales")
+
+sum(is.na(souvenir.ts))
+
+
+```
+
+```{r}
+length(souvenir)
+nValid <- 12
+nTrain <- length(souvenir.ts) - nValid
+nTrain
+plot(souvenir.ts, ylab = "Souvenir Sales", type="l", bty="l", main = "Souvenir Sales")
+souvenir
+
+```
+
+```{r}
+min(souvenir$Sales)
+max(souvenir$Sales)
+train.ts <- window(souvenir.ts, start = c(1995, 1), end = c(1995, nTrain))
+valid.ts <- window(souvenir.ts, start = c(1995, nTrain + 1), end = c(1995, nTrain + nValid)) 
+
+souvenir.lm <- tslm(souvenir.ts ~ trend + I(trend^2)) 
+souvenir.lm.pred <- forecast(souvenir.lm, h = nValid, level = 0)
+
+plot(souvenir.lm.pred, ylim = c(1660,104662), 
+     ylab = "souvenir", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1995,2006.25), main ="", flty = 2) 
+axis(1, at = seq(1995, 2001, 12), labels = format(seq(1995, 2001, 12))) 
+lines(souvenir.lm$fitted, lwd = 2) 
+lines(valid.ts)
+
+hist(souvenir.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+
+
+
+```
+
+
+Partitioning data so there's a training and a validation set
+```{r}
+time <- time(souvenir.ts)
+n.valid <- 12
+n.train <- length(souvenir.ts) - n.valid
+train.ts <- window(souvenir.ts, start = time[1], end = time[n.train])
+valid.ts <- window(souvenir.ts, start = time[n.train + 1], end = time[n.train+n.valid])
+head(valid.ts)
+```
+
+```{r}
+yearly <- aggregate(souvenir.ts, nfrequency = 1, FUN = sum)
+plot(yearly, bty = "l")
+
+```
+
+```{r}
+par(oma = c(0,0,0,2))
+xrange <-  c(1, 7)
+yrange <- range(souvenir.ts)
+plot(xrange, yrange, type = "n", xlab = "Year Number", ylab = "souvenir", bty = "l")
+
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+
+for (i in 1:12) {
+  currentMonth <- subset(souvenir.ts, cycle(souvenir.ts) == i)
+  lines(currentMonth, type = "b", lwd = 1.5, 
+        lty= linetype[i], col = colors[i],  pch = plotchar[i])
+}
+title("souvenir Broken Out y Month")
+legend(15, 2200, 1:12, cex = 0.8, col = colors, pch = plotchar, lty = linetype, title = "Month", xpd = NA)
+
+```
+
+```{r}
+cycle(souvenir.ts)
+par(oma = c(0, 0, 0, 2))
+plot(c(1, 7), c(1660,104662), type = "n", bty = "l", xlab = "Year", ylab = "souvenir")
+jan <- subset(souvenir.ts, cycle(souvenir.ts)==1)
+lines(jan, col = 1, pch = 1, type = "b")
+
+```
+
+
+
+(a) Why was the data partitioned? 
+
+(b) Why did the analyst choose a 12-month validation period? 
+
+(c) What is the naive forecast for the validation period? (assume that you must provide forecasts for 12 months ahead) 
+
+(d) Compute the RMSE and MAPE for the naive forecasts. 
+
+(e) Plot a histogram of the forecast errors that result from the naive forecasts (for the validation period). Plot also a time plot for the naive forecasts and the actual sales numbers in the validation period. What can you say about the behavior of the naive forecasts? 
+
+(f) The analyst found a forecasting model that gives satisfactory performance on the validation set. What must she do to use the forecasting model for generating forecasts for year 2002? 
+
+2. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a threeyear period.
+
+If the goal is forecasting sales in future months, which of the following steps should be taken? (choose one or more) 
+
+*partition the data into training and validation periods 
+
+*examine time plots of the series and of model forecasts only for the training period
+
+*look at MAPE and RMSE values for the training period 
+
+*look at MAPE and RMSE values for the validation period 
+
+*compute naive forecasts
+```{r}
+souvenir <- read.csv("Amtrak.csv")
+dim(souvenir)
+
+```
+
