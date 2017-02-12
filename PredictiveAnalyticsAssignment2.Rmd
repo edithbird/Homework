@@ -122,14 +122,28 @@ naive.pred <- naive(train.ts, h = stepsAhead)
 error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead]
 percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
 }
-#MAE
- mean(abs(error))
-#MASE 
- sqrt(mean(error^2))
-#MAPE 
- mean(abs(percent.error))
-  
+
+
 ```
+
+
+**Mean Absolute Error**
+```{r, echo=FALSE}
+kable( mean(abs(error)))
+```
+
+
+**Mean Absolute Squared Error**
+```{r, echo=FALSE}
+kable(sqrt(mean(error^2)))
+```
+
+
+**Mean Absolute Percent Error**
+```{r, echo=FALSE}
+kable(mean(abs(percent.error)))
+```
+
 
 
 **code for computing naive and seasonal naive forecasts and their predictive measures**
