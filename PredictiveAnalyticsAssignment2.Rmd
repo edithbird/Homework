@@ -14,101 +14,149 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(knitr)
 library(forecast)
-souvenir <- read.csv("SouvenirSales.csv", header = T, stringsAsFactors = F)
-souvenir <- souvenir[, -c(3:4)]
-str(souvenir)
-head(souvenir)
+```
+
+```{r}
+souvenir <- read.csv("SouvenirSales.csv", header = TRUE, stringsAsFactors = FALSE)
+kable(head(souvenir))
 souvenir.ts <- ts(souvenir$Sales, start = c(1995, 1), frequency = 12)
-is.ts(souvenir.ts)
-#find number of NA
-sum(is.na(souvenir$Sales))
-dim(souvenir.ts)
-min(souvenir$Sales)
-
-plot(souvenir.ts, ylab = "Souvenir Sales", type="l", bty="l", main = "Souvenir Sales")
-
-sum(is.na(souvenir.ts))
-
-
+summary(souvenir.ts)
 ```
 
 ```{r}
-length(souvenir)
-nValid <- 12
-nTrain <- length(souvenir.ts) - nValid
-nTrain
-plot(souvenir.ts, ylab = "Souvenir Sales", type="l", bty="l", main = "Souvenir Sales")
-souvenir
-
-```
-
-```{r}
-min(souvenir$Sales)
-max(souvenir$Sales)
-train.ts <- window(souvenir.ts, start = c(1995, 1), end = c(1995, nTrain))
+#1 validation
+nValid <- 12 
+#2 training
+nTrain <- length(souvenir.ts) - nValid 
+#3 training window
+train.ts <- window(souvenir.ts, start = c(1995, 1), end = c(1995, nTrain)) 
+# validation window
 valid.ts <- window(souvenir.ts, start = c(1995, nTrain + 1), end = c(1995, nTrain + nValid)) 
-
-souvenir.lm <- tslm(souvenir.ts ~ trend + I(trend^2)) 
+#5 trend line
+souvenir.lm <- tslm(train.ts ~ trend + I(trend^2)) 
+#6 forecast on training prediction
 souvenir.lm.pred <- forecast(souvenir.lm, h = nValid, level = 0)
-
-plot(souvenir.lm.pred, ylim = c(1660,104662), 
-     ylab = "souvenir", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1995,2006.25), main ="", flty = 2) 
-axis(1, at = seq(1995, 2001, 12), labels = format(seq(1995, 2001, 12))) 
-lines(souvenir.lm$fitted, lwd = 2) 
+#7 plot forecast
+plot(souvenir.lm.pred, ylim = c(1660, 105000), ylab = "souvenir", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1995,2002.25), main ="", flty = 2)
+#8 axis
+axis(1, at = seq(1995, 2002, 1), labels = format(seq(1995, 2002, 1)))
+#9 trend line
+lines(souvenir.lm$fitted, lwd = 2)
+#10 validation line
 lines(valid.ts)
+```
 
-hist(souvenir.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+**code for computing predictive measures**
 
+```{r}
+accuracy(souvenir.lm.pred$mean, valid.ts)
+```
 
+**code for calculating the forecast errors in the validation period, i.e., the residuals**
 
+```{r}
+#what's included in the forecast
+names(souvenir.lm.pred) 
+#the model's residuals are the forecast errors in the training period
+souvenir.lm.pred$residuals 
+#subtracting the model's mean (or forecasts) from valid.ts (or actuals) in the validation period gives the forecast errors in the validation period
+valid.ts - souvenir.lm.pred$mean
 ```
 
 
-Partitioning data so there's a training and a validation set
+**code for creating the histogram of the forecast errors in each of 7 equally sized bins**
 ```{r}
-time <- time(souvenir.ts)
-n.valid <- 12
-n.train <- length(souvenir.ts) - n.valid
-train.ts <- window(souvenir.ts, start = time[1], end = time[n.train])
-valid.ts <- window(souvenir.ts, start = time[n.train + 1], end = time[n.train+n.valid])
-head(valid.ts)
+hist(souvenir.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="") 
+```
+
+**forecast with 95% confidence interval**
+
+```{r}
+#6 forecast on training prediction
+souvenir.lm.pred <- forecast(souvenir.lm, h = nValid, level = 95)
+#7 plot forecast
+plot(souvenir.lm.pred, ylim = c(1660, 105000), ylab = "souvenir", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1995,2002.25), main ="", flty = 2)
+#8 axis
+axis(1, at = seq(1995, 2002, 1), labels = format(seq(1995, 2002, 1)))
+#9 trend line
+lines(souvenir.lm$fitted, lwd = 2)
+#10 validation line
+lines(valid.ts)
+```
+
+To create a normal probability plot in R, put the forecast error into the function qqnorm.
+
+```{r}
+qqnorm(souvenir.lm.pred$residuals)
+quantile(souvenir.lm.pred$residuals)
 ```
 
 ```{r}
-yearly <- aggregate(souvenir.ts, nfrequency = 1, FUN = sum)
-plot(yearly, bty = "l")
-
+souvenir.ets.AAN <- ets(souvenir.ts, model = "AAN") #Fit Model 1 to the time series. 
+souvenir.ets.MMN <- ets(souvenir.ts, model = "MMN", damped = FALSE) #Fit Model 2. 
+souvenir.ets.MMdN <- ets(souvenir.ts, model = "MMN", damped = TRUE) #Fit Model 3. 
+souvenir.ets.AAN.pred <- forecast(souvenir.ets.AAN, h = 15, level = c(0.2, 0.4, 0.6, 0.8)) 
+souvenir.ets.MMN.pred <- forecast(souvenir.ets.MMN, h = 15, level = c(0.2, 0.4, 0.6, 0.8)) 
+souvenir.ets.MMdN.pred <- forecast(souvenir.ets.MMdN, h = 15, level = c(0.2, 0.4, 0.6, 0.8)) 
+par(mfrow = c(1, 3)) #This command sets the plot window to show 1 row of 3 plots. 
+plot(souvenir.ets.AAN.pred, xlab = "Month", ylab = "souvenir (in millions)", ylim = c(1660, 105000)) 
+plot(souvenir.ets.MMN.pred, xlab = "Month", ylab="souvenir (in millions)", ylim = c(1660, 105000)) 
+plot(souvenir.ets.MMdN.pred, xlab = "Month", ylab="souvenir (in millions)", ylim = c(1660, 105000))
 ```
 
+     
+
+**code for computing the predictive measures for rollforward one-month-ahead forecasts**
+
 ```{r}
-par(oma = c(0,0,0,2))
-xrange <-  c(1, 7)
-yrange <- range(souvenir.ts)
-plot(xrange, yrange, type = "n", xlab = "Year Number", ylab = "souvenir", bty = "l")
+fixed.nValid <- 12
+fixed.nTrain <- length(souvenir.ts) - fixed.nValid
+stepsAhead <- 1
+error <- rep(0, fixed.nValid - stepsAhead + 1)
+percent.error <- rep(0, fixed.nValid - stepsAhead + 1)
 
-colors <- rainbow(12) 
-linetype <- c(1:12) 
-plotchar <- c(1:12)
-
-for (i in 1:12) {
-  currentMonth <- subset(souvenir.ts, cycle(souvenir.ts) == i)
-  lines(currentMonth, type = "b", lwd = 1.5, 
-        lty= linetype[i], col = colors[i],  pch = plotchar[i])
+for(j in fixed.nTrain:(fixed.nTrain + fixed.nValid - stepsAhead)) { 
+  train.ts <- window(souvenir.ts, start = c(1995, 1), end = c(1995, j))
+  valid.ts <- window(souvenir.ts, start = c(1995, j + stepsAhead), end = c(1995, j + stepsAhead)) 
+naive.pred <- naive(train.ts, h = stepsAhead)   
+error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead]
+percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
 }
-title("souvenir Broken Out y Month")
-legend(15, 2200, 1:12, cex = 0.8, col = colors, pch = plotchar, lty = linetype, title = "Month", xpd = NA)
+#MAE
+ mean(abs(error))
+#MASE 
+ sqrt(mean(error^2))
+#MAPE 
+ mean(abs(percent.error))
+  
+```
 
+
+**code for computing naive and seasonal naive forecasts and their predictive measures**
+
+```{r}
+fixed.nValid <- 12 
+fixed.nTrain <- length(souvenir.ts) - fixed.nValid
+train.ts <- window(souvenir.ts, start = c(1995, 1), end = c(1995, fixed.nTrain)) 
+valid.ts <- window(souvenir.ts, start = c(1995, fixed.nTrain + 1), end = c(1995, fixed.nTrain + fixed.nValid)) 
 ```
 
 ```{r}
-cycle(souvenir.ts)
-par(oma = c(0, 0, 0, 2))
-plot(c(1, 7), c(1660,104662), type = "n", bty = "l", xlab = "Year", ylab = "souvenir")
-jan <- subset(souvenir.ts, cycle(souvenir.ts)==1)
-lines(jan, col = 1, pch = 1, type = "b")
-
+naive.pred <- naive(train.ts, h = fixed.nValid)
+snaive.pred <- snaive(train.ts, h = fixed.nValid)
 ```
 
+**Accuracy of Naive Forecast**
+
+```{r}
+kable(accuracy(naive.pred, valid.ts)) 
+```
+
+**Accuracy of Seasonal Naive Forecast**
+
+```{r}
+kable(accuracy(snaive.pred, valid.ts))
+```
 
 
 (a) Why was the data partitioned? 
@@ -136,9 +184,4 @@ If the goal is forecasting sales in future months, which of the following steps 
 *look at MAPE and RMSE values for the validation period 
 
 *compute naive forecasts
-```{r}
-souvenir <- read.csv("Amtrak.csv")
-dim(souvenir)
-
-```
 
