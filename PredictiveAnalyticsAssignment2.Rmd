@@ -9,7 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-1. Souvenir Sales: The file SouvenirSales.xls contains monthly sales for a souvenir shop at a beach resort town in Queensland, Australia, between 1995 and 2001. Back in 2001, the store wanted to use the data to forecast sales for the next 12 months (year 2002). They hired an analyst to generate forecasts. The analyst first partitioned the data into training and validation periods, **with the validation period containing the last 12 months of data (year 2001)**. She then fit a forecasting model to sales, using the training period. Partition the data into the training and validation periods as explained above. 
+1. Souvenir Sales: The file SouvenirSales.xls contains monthly sales for a souvenir shop at a beach resort town in Queensland, Australia, between 1995 and 2001. Back in 2001, the store wanted to use the data to forecast sales for the next 12 months (year 2002). They hired an analyst to generate forecasts. The analyst first partitioned the data into training and validation periods, **with the validation period containing the last 12 months of data (year 2001)**. She then fit a forecasting model to sales, using the training period. 
+
+**Partition the data into the training and validation periods as explained above.** 
 
 ```{r}
 library(knitr)
@@ -18,10 +20,15 @@ library(forecast)
 
 ```{r}
 souvenir <- read.csv("SouvenirSales.csv", header = TRUE, stringsAsFactors = FALSE)
-kable(head(souvenir))
 souvenir.ts <- ts(souvenir$Sales, start = c(1995, 1), frequency = 12)
 summary(souvenir.ts)
 ```
+
+**The most most recent 13 months of ShampooSales data**
+```{r}
+kable(tail(souvenir, 13))
+```
+
 
 ```{r}
 #1 validation
@@ -82,7 +89,11 @@ axis(1, at = seq(1995, 2002, 1), labels = format(seq(1995, 2002, 1)))
 lines(souvenir.lm$fitted, lwd = 2)
 #10 validation line
 lines(valid.ts)
+
 ```
+
+
+
 
 To create a normal probability plot in R, put the forecast error into the function qqnorm.
 
@@ -123,25 +134,24 @@ error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead]
 percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
 }
 
-
 ```
 
 
 **Mean Absolute Error**
 ```{r, echo=FALSE}
-kable( mean(abs(error)))
+mean(abs(error))
 ```
 
 
 **Mean Absolute Squared Error**
 ```{r, echo=FALSE}
-kable(sqrt(mean(error^2)))
+sqrt(mean(error^2))
 ```
 
 
 **Mean Absolute Percent Error**
 ```{r, echo=FALSE}
-kable(mean(abs(percent.error)))
+mean(abs(percent.error))
 ```
 
 
@@ -173,29 +183,84 @@ kable(accuracy(snaive.pred, valid.ts))
 ```
 
 
-(a) Why was the data partitioned? 
+**(a) Why was the data partitioned?**
+Partitioning data helps address the problem of overfitting a model and allows the modeler to evaluate the performance of a model by measuring forecast errors. Models are *trained* on the earlier portion and their predictive performnce is assessed on the later portion. In the shampoo sales example, the analyst used the **training** set to build models and then evaluated their performance of the most recent 12 months by comparing what the model forcast and the actual data. 
 
-(b) Why did the analyst choose a 12-month validation period? 
+**b) Why did the analyst choose a 12-month validation period?** 
+The validation period should mimic the forecast horizon. Additionally, too long a validation period would mean too little most recent training data will be used to build a model. The data frequency and the forecasting goal also need to be considered when deciding on the length of the validation period. 
 
-(c) What is the naive forecast for the validation period? (assume that you must provide forecasts for 12 months ahead) 
 
-(d) Compute the RMSE and MAPE for the naive forecasts. 
+**(c) What is the naive forecast for the validation period? (assume that you must provide forecasts for 12 months ahead)**
 
-(e) Plot a histogram of the forecast errors that result from the naive forecasts (for the validation period). Plot also a time plot for the naive forecasts and the actual sales numbers in the validation period. What can you say about the behavior of the naive forecasts? 
+Reminder: 
+MAE = MAD: mean absolute error/mean absolute deviation
+MAPE: mean absolute percent error
+RMSE: root mean swuared error
 
-(f) The analyst found a forecasting model that gives satisfactory performance on the validation set. What must she do to use the forecasting model for generating forecasts for year 2002? 
+**Forecast for validation (2001)** 
 
-2. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a threeyear period.
+```{r}
+naive.pred
 
-If the goal is forecasting sales in future months, which of the following steps should be taken? (choose one or more) 
+snaive.pred
+```
 
-*partition the data into training and validation periods 
 
-*examine time plots of the series and of model forecasts only for the training period
+**(d) Compute the RMSE and MAPE for the naive forecasts.** 
 
-*look at MAPE and RMSE values for the training period 
+**RMSE**
+```{r}
+sqrt(mean(error^2))
+```
 
-*look at MAPE and RMSE values for the validation period 
 
-*compute naive forecasts
+**MAPE**
+```{r}
+mean(abs(percent.error))
+```
+
+
+**Accuracy of Naive Forecast**
+
+```{r}
+
+
+
+kable(accuracy(naive.pred, valid.ts)) 
+```
+
+
+**(e) Plot a histogram of the forecast errors that result from the naive forecasts (for the validation period).** 
+
+```{r}
+hist(souvenir.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+```
+
+**Plot also a time plot for the naive forecasts and the actual sales numbers in the validation period. What can you say about the behavior of the naive forecasts?** 
+
+```{r}
+
+
+actualSales.ts <- ts(souvenir$Sales, start = c(1995,1), end = c(2001, 12), frequency = 12)
+
+plot(souvenir.ts, ylim = c(1660, 105000), ylab = "Sales", xlab = "Time", bty = "l")
+```
+
+
+
+**(f) The analyst found a forecasting model that gives satisfactory performance on the validation set. What must she do to use the forecasting model for generating forecasts for year 2002?** 
+
+**2. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a threeyear period.**
+
+**If the goal is forecasting sales in future months, which of the following steps should be taken? (choose one or more)** 
+
+**1. partition the data into training and validation periods** 
+
+**2.examine time plots of the series and of model forecasts only for the training period**
+
+**3.look at MAPE and RMSE values for the training period** 
+
+**4.look at MAPE and RMSE values for the validation period** 
+
+**5.compute naive forecasts**
 
