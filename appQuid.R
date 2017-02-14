@@ -1,0 +1,77 @@
+
+
+library(shiny)
+
+
+ui <- fluidPage(
+   
+   # Application title
+   titlePanel("Quiddler Score"),
+   
+   # Sidebar with a slider input for number of bins 
+   sidebarLayout(
+      sidebarPanel(
+        
+        
+        numericInput("integer1", "Round 1 Chris:",
+                     min=-15, max=60, value=0),
+        numericInput("integer2", "Round 1 Paul:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer3", "Round 2 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer4", "Round 2 Paul:",
+                     min=-15, max=60, value=0),
+        numericInput("integer5", "Round 3 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer6", "Round 3 Paul:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer7", "Round 4 Chris:",
+                     min=-15, max=60, value=0),
+        numericInput("integer8", "Round 4 Paul:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer9", "Round 5 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer10", "Round 5 Paul:",
+                     min=-15, max=60, value=0),
+        numericInput("integer11", "Round 6 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer12", "Round 6 Paul:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer13", "Round 7 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer14", "Round 7 Paul:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer15", "Round 8 Chris:", 
+                     min=-15, max=60, value=0),
+        numericInput("integer16", "Round 8 Paul:", 
+                     min=-15, max=60, value=0)
+      ),
+      
+      # Show a plot of the generated distribution
+      mainPanel(
+        
+        tableOutput("table1")
+       
+      )
+   )
+)
+
+# Define server logic required to draw a histogram
+server <- function(input, output) {
+   
+   output$table1 <- renderTable({
+     data.frame(
+       #Name = c("Chris", "Paul"), 
+       Chris = sum(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15), 
+       Paul = sum(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
+     )
+
+     
+     
+      
+   })
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+
