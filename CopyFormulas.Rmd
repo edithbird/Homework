@@ -1,0 +1,131 @@
+---
+title: "CopyFormulas"
+author: "Christine Iyer"
+date: "February 17, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#read in data, convert to ts, plot entire series
+souvenir <- read.csv("SouvenirSales.csv", header = TRUE, stringsAsFactors = FALSE)
+str(souvenir)
+souvenir.ts <- ts(souvenir$Sales, start=c(1995,1), frequency=12)
+plot(souvenir.ts, bty="l")
+```
+
+```{r}
+#Break out each month and plot over the years
+# set the outer margin area to the right a bit bigger
+par(oma = c(0, 0, 0, 2))
+
+# We have 5 years of data
+xrange <- c(1995,2002)
+# Get the range of the ridership to set up a nicely formatted plot
+yrange <- range(souvenir.ts)
+
+# set up the plot 
+plot(xrange, yrange, type="n", xlab="Year", ylab="souvenir souvenirSalesments (millions $US)", bty="l", las=1)
+
+# Give each of the months its own color, line type, and character
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+
+axis(1, at=seq(1995,2002,1), labels=format(seq(1995,2002,1)))
+
+# add lines 
+for (i in 1:12) { 
+  currentMonth <- subset(souvenir.ts, cycle(souvenir.ts)==i)
+  lines(seq(1995, 1995+length(currentMonth)-1,1), currentMonth, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+
+# add a title
+title("Souvenir Sales Broken Out by Month")
+
+# add a legend 
+legend(2002.35, 4800, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
+```
+
+
+```{r}
+library(forecast)
+
+# Set the length of the validation period to four quarters (one year)
+validLength <- 12
+
+# Set the length of the training period to everything else
+trainLength <- length(souvenir.ts) - validLength
+
+# Partition the data into training and validation periods
+ssouvenirSalesTrain <- window(souvenir.ts, start=c(1995,1), end=c(1995, trainLength))
+ssouvenirSalesValid <- window(souvenir.ts, start=c(1995,trainLength+1), end=c(1995,trainLength+validLength))
+
+# Use the seasonal naive forecast
+naiveForValid <- naive(ssouvenirSalesTrain, h=validLength)
+
+# To see the point forecasts from the seasonal naive model
+naiveForValid$mean
+
+snaiveForValid <- snaive(ssouvenirSalesTrain, h=validLength)
+snaiveForValid$mean
+```
+
+```{r}
+accuracy(naiveForValid, ssouvenirSalesValid)
+accuracy(snaiveForValid, ssouvenirSalesValid)
+```
+
+```{r}
+# Plot the histogram and store it to use later
+myhist <- hist(snaiveForValid$residuals, ylab="Frequency", xlab="Forecast Error", main="", bty="l")
+
+# Use stored hist object to help set up density curve
+multiplier <- myhist$counts / myhist$density
+
+# Need to ignore NA from 1985
+mydensity <- density(snaiveForValid$residuals, na.rm=TRUE)
+mydensity$y <- mydensity$y * multiplier[1]
+
+# Add the density curve
+lines(mydensity)
+```
+
+```{r}
+
+names(ssouvenirSalesValid)
+class(ssouvenirSalesValid)
+options(scipen=999, big.mark=",")
+format(ssouvenirSalesValid, big.mark=",", scientific=FALSE)
+
+
+# Plot the actual values from the validation period (2001)
+plot(ssouvenirSalesValid, bty="l", xaxt="n", xlab="The Year 2001", yaxt="n", ylab="souvenirSalesments")
+
+axis(1, at=seq(2001,2001.75,0.25), labels=c("Jan 2001", "April 2001", "July 2001", "October 2001"))
+axis(2, las=2)
+
+# Now add the forecasts and make the line red and dashed
+lines(snaiveForValid$mean, col=2, lty=2)
+
+# Add a legend
+legend(2001,4000, c("Actual","Forecast"), col=1:2, lty=1:2)
+```
+
+```{r}
+plot(ssouvenirSalesValid, bty="l", xaxt="n", xlab="The Year 2001", yaxt="n", ylab="Shipments")
+
+axis(1, at=seq(2001,2001.75,0.25), labels=c("Jan 2001", "April 2001", "July 2001", "October 2001"))
+axis(2, las=2)
+
+# Now add the forecasts and make the line red and dashed
+lines(naiveForValid$mean, col=2, lty=2)
+
+# Add a legend
+legend(2001,2900, c("Actual","Forecast"), col=1:2, lty=1:2)
+```
+
