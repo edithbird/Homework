@@ -1,0 +1,239 @@
+---
+title: "Final Assignment 2"
+author: "Christine Iyer"
+date: "February 19, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(knitr)
+library(forecast)
+library(pander)
+```
+
+## R Markdown
+
+**1. Souvenir Sales: The file SouvenirSales.xls contains monthly sales for a souvenir shop at a beach resort town in Queensland, Australia, between 1995 and 2001.**
+
+Back in 2001, the store wanted to use the data to forecast sales for the next 12 months (year 2002). They hired an analyst to generate forecasts. The analyst first partitioned the data into training and validation periods, with the validation period containing the last 12 months of data (year 2001). She then fit a forecasting model to sales, using the training period. 
+
+**Partition the data into the training and validation periods as explained above.**
+
+```{r}
+Souvenir <- read.csv("SouvenirSales.csv", header = TRUE, stringsAsFactors = FALSE)
+Souvenir.ts <- ts(Souvenir$Sales, start = c(1995, 1), frequency = 12)
+souvenirValidLength <- 12
+souvenirTrainingLength <- length(Souvenir.ts) - souvenirValidLength
+```
+
+### Training Set
+
+```{r}
+souvenirTrainingWindow <- window(Souvenir.ts, start = c(1995, 1), end = c(1995, souvenirTrainingLength))
+pander(souvenirTrainingWindow)
+```
+
+###Validation Set
+
+```{r}
+souvenirValidWindow <- window(Souvenir.ts, start = c(1995, souvenirTrainingLength + 1), end = c(1995, souvenirTrainingLength + souvenirValidLength))
+pander(souvenirValidWindow)
+```
+
+
+
+**(a) Why was the data partitioned?**
+
+Partitioning data helps address the problem of overfitting a model and allows the modeler to evaluate the performance of a model by measuring forecast errors. Models are *trained* on the earlier portion and their predictive performnce is assessed on the later portion. In the shampoo sales example, the analyst uses the **training** set to build a forecasting model and then evaluates by comparing what the model forcasts for the next year to the actual data that is the **validation set**. 
+
+**(b) Why did the analyst choose a 12-month validation period?**
+
+The validation period should mimic the forecast horizon. Additionally, too long a validation period would mean too little of most recent training data will be used to build a model. The data frequency and the forecasting goal also need to be considered when deciding on the length of the validation period. 
+
+**(c) What is the naive forecast for the validation period? (assume that you must provide forecasts for 12 months ahead)**
+
+The naive forecast is the last data point in the training set, i.e., the most recent data point. Since a **naive** forecast is equal to the previous point, the Jan 2001 is the same as Dec. 2000. In this non-seasonal naive forecast, Feb 2001 will be equal to Jan 2001. This carries for the rest of the forecast period. When plotted, the naive forecast will be a straight line. There is also a **seasonal naive** forecast which accounts for the seasonal cycles in a time series. 
+
+Before deploying a forecast, I will plot the entire Souvenir Sales time series data set to see if there is seasonality. 
+
+```{r}
+plot(Souvenir.ts/1000, bty="l", xlab = "Year", ylab = "Souvenir Sales (in thousands)", lwd = 2, main = "Souvenir Sales 1995-2001")
+```
+
+The time series shows a seasonal pattern with a small spike in sales early in the year, followed by a slow, steady incline, and a large spike at the end of the year. This is supported by both the season plot and the monthly plot of the entire time series.  
+
+```{r}
+ggseasonplot(Souvenir.ts/1000, ylab = "Souvenir Sales (in thousands)", main = "Seasonal Plot for Souvenir Sales", lwd = 2)
+```
+
+```{r}
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1995,2002)
+yrange <- range(Souvenir.ts/1000)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Souvenir souvenir (in thousands of UD $)", bty="l", las=1)
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+axis(1, at=seq(1995,2002,1), labels=format(seq(1995,2002,1)))
+for (i in 1:12) { 
+  currentMonth <- subset(Souvenir.ts/1000, cycle(Souvenir.ts/1000)==i)
+  lines(seq(1995, 1995+length(currentMonth)-1,1), currentMonth, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Souvenir Sales Broken Out by Month")
+legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
+```
+
+The lack of overlap in the month lines, as well as the relative straightness of the lines, confirms the presence of seasonality for the Souvenir Sales time series data set. 
+
+Because there is seasonality, I will show both naive (as required in the question) and seasonal naive forecasts for 2001. A seasonal naive forecast is the appropriate choice for this data. 
+
+
+###2001 (Validation period) Naive Forecast for Souvenir Sales
+
+```{r}
+naiveSouvenirValid <- naive(souvenirTrainingWindow, h = souvenirValidLength)
+pander(naiveSouvenirValid$mean)
+```
+
+###2001 (Validation period) Seasonal Naive Forecast for Souvenir Sales
+
+```{r}
+snaiveSouvevnirValid <- snaive(souvenirTrainingWindow, h = souvenirValidLength)
+pander(snaiveSouvevnirValid$mean)
+```
+
+
+###Plot of seasonal naive forecast for 2001 with confidence intervals. 
+
+Blue line is the forecast and the shaded grey areas are confidence intervals.
+
+```{r}
+plot(snaiveSouvevnirValid, xlab = "Year", ylab = "Souvenir Sales")
+```
+
+**(d) Compute the RMSE and MAPE for the naive forecasts.** 
+
+###**Error computations for naive forecast**
+
+**The RMSE = 56099.07 and the MAPE = 290.95049**
+```{r}
+kable(accuracy(naiveSouvenirValid, souvenirValidWindow))
+```
+
+###**Error computations for seasonal naive forecast**
+
+**The RMSE = 9542.346 and the MAPE = 27.27926**
+```{r}
+kable(accuracy(snaiveSouvevnirValid, souvenirValidWindow))
+```
+
+
+**(e1) Plot a histogram of the forecast errors that result from the naive forecasts (for the validation period).**
+
+
+The histogram below shows the frequency distribution of seasonal naive forecasting errors. The snaive forecast method is consistently underpredicting sales. 
+
+
+```{r}
+histogram <- hist(snaiveSouvevnirValid$residuals/1000, ylab="Frequency", xlab="Forecast Error (in thousands)", main="Frequency of Seasonal Naive Forecasting Errors in Validation Period", bty="l", ylim = c(0, 50))
+multiplier <- histogram$counts / histogram$density
+density <- density(snaiveSouvevnirValid$residuals/1000, na.rm=TRUE)
+density$y <- density$y * multiplier[1]
+lines(density, col = "blue", lwd = 2)
+```
+
+
+
+**(e2) Plot also a time plot for the naive forecasts and the actual sales numbers in the validation period.**
+
+What we see in the plots below is a seasonal forecast that consistetly is underpredicting what the actual forecast is. 
+
+```{r}
+options(scipen=999, big.mark=",")
+# Plot the actual values from the validation period (2001)
+plot(souvenirValidWindow/1000, bty="l", xaxt="n", xlab="The Year 2001", yaxt="n", ylab="Souvenir Sales (in thousands)",  main = "2001 Souvenir Sales: Actual Sales  and Naive and Seasonal Naive Forecasts", lty = 1, lwd = 2, col = 2)
+#x and y axes
+axis(1, at=seq(2001,2001.917,0.08333), labels=c("Jan", "Feb", "Mar", "April","May","June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"))
+axis(2, las=2)
+# Naive forecast red, solid line
+lines(naiveSouvenirValid$mean/1000, col=3, lty=1, lwd = 2)
+#Seasonal naive forecast green dashed line
+lines(snaiveSouvevnirValid$mean/1000, col=4, lty=1, lwd = 2)
+# Add a legend
+legend(2001,65, c("Actual Sales","Naive Forecast", "Seasonal Naive"), col=2:4, lty=1, lwd = 2)
+```
+
+
+### Plot residuals over time 
+**Most residuals are over the zero line, further illustrating underpredicting.**
+
+```{r}
+plot(snaiveSouvevnirValid$residuals, xlab = "Year", ylab = "Residuals", main = "Residuals by Year", lwd = 2)
+```
+
+###Normality Plot
+
+**The distribution of error terms in the training period is not normal; we can surmise this because the line is not at a 45 degree angle from the lower left hand corner.**
+
+```{r}
+qqnorm(snaiveSouvevnirValid$residuals[13:72], col = 1, lwd = 1)
+qqline(snaiveSouvevnirValid$residuals[13:72], col = 4, lwd = 1)
+```
+
+**Residuals from validation period are not normally distributed either; the line is not at a 45 degree angle and the errors are positive, indicating underprediction. **
+
+```{r}
+qqnorm(snaiveSouvevnirValid$mean, col = 1, lwd = 2)
+qqline(snaiveSouvevnirValid$mean, col = 4, lwd = 2)
+```
+
+
+**(e3)What can you say about the behavior of the naive forecasts?**
+
+Actual sales of souvenirs in 2001 is quite different from the naive forecast. This is evident in the plot, "2001 Souvenir Sales: Actual Sales  and Naive and Seasonal Naive Forecasts" which shows both actual and forecast values; the red line delineates the actual sales and the bue line represents the seasonal naive forecast. (The straight green line is the naive forecast not taking seasonality into consideration). As we saw from previous data, the time series exhibits seasonality, therefore a seasonal naive forecast would be more appropriate. Although the seasonal naive forecast mimics more closely the actual souvenir sales, it is consistently underpredicting, and this is evident fromthe above 4 plots. Furthermore, the errors for both the training and validation periods are not normally distributed. 
+
+The seasonal naive forecast is generally a consistent underprediction of the actual data. 
+
+
+**(f) The analyst found a forecasting model that gives satisfactory performance on the validation set. What must she do to use the forecasting model for generating forecasts for year 2002?**
+
+The forecaster must recombine the data from the training and the validation sets to generate and deploy a forecast for 2002. The validation set has the most recent data and is valuable and necessary because it it may likely lead to a more accurate forecast. Finally, generating a forecast based solely on the training set, forces the forcaster to forecast further into the future than he/she would have to when using the recombined full data set, i.e., to forecast 2002 from only the training set, it would be necessary to forecast 2001 and 2002. And the further out the forecast horizon, the less accurate the forecast becomes.   
+
+
+**2. Forecasting Shampoo Sales: The file ShampooSales.xls contains data on the monthly sales of a certain shampoo over a threeyear period.**
+
+
+**If the goal is forecasting sales in future months, which of the following steps should be taken? (choose one or more)**
+
+
+**partition the data into training and validation periods**
+
+This is a necessary step in forecasting because in order to find the best forecasting model, the data needs to be fitted to the model and then it needs to be tested for predictive accuracy. This can only be done with partitioning. 
+
+**examine time plots of the series and of model forecasts only for the training period**
+
+No. plots of both the training and validation periods should be examined. A plot of the forecast from the training data during the validation period can be compared to the actual data. It is important to "eyeball" how the data looks when plotted together. 
+
+**look at MAPE and RMSE values for the training period**
+
+No,  the MAPE and RMSE are less important considerations in the training period. 
+
+**look at MAPE and RMSE values for the validation period**
+
+Yes,  this is an essential step in order to evaluate predictive performance of a forecast. The validation period is a more objective basis than the training period, and therefore these computations are important to consider in the test set. 
+
+**compute naive forecasts**
+
+Yes, naive and seasonal naive forecasts provide an important baseline forecast for comparison of the forecast and of the errors. They may often may not be the model of choice, however they should always be run. 
+
