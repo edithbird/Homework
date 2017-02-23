@@ -48,9 +48,11 @@ setup_twitter_oauth(consumer_key, consumer_secret,
 
 
 ```{r}
-trump_tweets <- userTimeline("POTUS", n = 5000)
+trump_tweets <- userTimeline("POTUS", n = 3200)
 trump_tweets_df <- tbl_df(map_df(trump_tweets, as.data.frame))
 ```
+
+
 
 ```{r}
 tweets <- trump_tweets_df 
@@ -94,7 +96,6 @@ tweet_words <- tweets %>%
   filter(!word %in% stop_words$word,
          str_detect(word, "[a-z]"))
 
-names(tweets)
 ```
 
 
