@@ -9,25 +9,33 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+[Video help on building sql database of tweets for R](https://www.youtube.com/watch?v=Gew1OmR-Egg)
+
 ```{r}
 library(knitr)
 #library(RMySQL)
 library(twitteR)
-#library(dplyr)
-#library(tidytext)
-#library(stringr)
-#library(purrr)
-#library(lubridate)
-#library(scales)
-#library(tidyr)
-#library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(stringr)
+library(purrr)
+library(lubridate)
+library(scales)
+library(tidyr)
+library(ggplot2)
 #library(forecast)
-library(RSQLite)
+#library(RSQLite)
 #library(DBI)
+#install.packages("RJSONIO")
+#library(RCurl)
+# library(stringr)
+# library(RJSONIO)
+# library(rvest)
+# library(reshape2)
 ```
 
 
-```{r}
+```{r, include=FALSE}
 consumer_key <- "UsCe7XLj03gFbK3C3aILJA1vd"
 consumer_secret <- "dXrS7DFrvPErpm5LqjkibXFlkPBww7J4lJAOObk38b04tLGwvW"
 access_token <- "909252506-W4WONt5BJTg9tVkrtnVE4poh3cikfUZYc0wOrCMH"
@@ -47,15 +55,37 @@ store_tweets_db(trump_tweets)
 ```{r}
 db <- dbConnect(SQLite(), dbname = "Tweets.sqlite")
 kable(dbListFields(db, "tweets"))
-#dbGetQuery(db, "SELECT * FROM tweets")
-#dbGetQuery(db, "Select count (*) from tweets")
-# dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 1")
-# dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 0")
-#dbGetQuery(db, "select text from tweets where reTweetCount > 5000")
+dbGetQuery(db, "SELECT * FROM tweets")
+dbGetQuery(db, "Select count (*) from tweets")
+dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 1")
+dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 0")
+dbGetQuery(db, "select text from tweets where reTweetCount > 5000")
+```
+
+# ```{r}
+# # retweets <- dbGetQuery(db, "Select text, retweetCount from tweets where reTweetCount > 5000")
+# # kable(head(retweets))
+
 ```
 
 ```{r}
-retweets <- dbGetQuery(db, "Select text, retweetCount from tweets where reTweetCount > 5000")
-kable(head(retweets))
+Ttweets <- userTimeline("POTUS", n = 3000, since = "2017-01-20")
+trump_tweets_df <- tbl_df(map_df(Ttweets, as.data.frame))
+tweets <- trump_tweets_df 
+tweets$created <- as.Date(tweets$created, format = "%Y-%m-%d")
+tweets <- tweets %>% select(created, text, retweetCount)
+kable(head(tweets, 10))
+kable(tail(tweets,50))
+tweetsCount <- tweets %>% select(created, text, retweetCount) %>% group_by(created) %>% summarise(Retweets = sum(retweetCount))
+#kable(tweetsCount)
+kable(names(tweets))
+
+head(tweets)
+
+# early_tweets <- read_html("https://twitter.com/POTUS")
+# 
+# created <-  .js-short-timestamp
+# text <- .tweet-text
+# reTweetCount <- .js-actionRetweet
 ```
 
