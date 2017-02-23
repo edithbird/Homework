@@ -1,0 +1,61 @@
+---
+title: "PracticeTwitter"
+author: "Christine Iyer"
+date: "February 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(knitr)
+#library(RMySQL)
+library(twitteR)
+#library(dplyr)
+#library(tidytext)
+#library(stringr)
+#library(purrr)
+#library(lubridate)
+#library(scales)
+#library(tidyr)
+#library(ggplot2)
+#library(forecast)
+library(RSQLite)
+#library(DBI)
+```
+
+
+```{r}
+consumer_key <- "UsCe7XLj03gFbK3C3aILJA1vd"
+consumer_secret <- "dXrS7DFrvPErpm5LqjkibXFlkPBww7J4lJAOObk38b04tLGwvW"
+access_token <- "909252506-W4WONt5BJTg9tVkrtnVE4poh3cikfUZYc0wOrCMH"
+access_secret <- "e5tQ6yRwYzAXiGxanu0xyf7x0X36KtQMITtxPzbuLE1NK"
+setup_twitter_oauth(consumer_key, consumer_secret,
+                    access_token, access_secret)
+```
+
+```{r}
+register_sqlite_backend("Tweets.sqlite")
+trump_tweets <- userTimeline("POTUS", n = 3200)
+#trump_tweets <- searchTwitter("#POTUS")
+store_tweets_db(trump_tweets)
+
+```
+
+```{r}
+db <- dbConnect(SQLite(), dbname = "Tweets.sqlite")
+kable(dbListFields(db, "tweets"))
+#dbGetQuery(db, "SELECT * FROM tweets")
+#dbGetQuery(db, "Select count (*) from tweets")
+# dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 1")
+# dbGetQuery(db, "SELECT text from tweets WHERE isRetweet = 0")
+#dbGetQuery(db, "select text from tweets where reTweetCount > 5000")
+```
+
+```{r}
+retweets <- dbGetQuery(db, "Select text, retweetCount from tweets where reTweetCount > 5000")
+kable(head(retweets))
+```
+

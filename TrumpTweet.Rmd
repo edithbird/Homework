@@ -25,6 +25,8 @@ library(scales)
 library(tidyr)
 library(ggplot2)
 library(forecast)
+library(RSQLite)
+library(DBI)
 
 ```
 
@@ -38,6 +40,14 @@ setup_twitter_oauth(consumer_key, consumer_secret,
 ```
 
 ```{r}
+# register_db_backend(db_handle)
+# register_sqlite_backend(sqlite_file, ...)
+# register_mysql_backend(db_name, host, user, password, ...)
+
+```
+
+
+```{r}
 trump_tweets <- userTimeline("POTUS", n = 5000)
 trump_tweets_df <- tbl_df(map_df(trump_tweets, as.data.frame))
 ```
@@ -47,13 +57,14 @@ tweets <- trump_tweets_df
 tweets$created <- as.Date(tweets$created, format = "%Y-%m-%d")
 tweets <- tweets %>% select(created, text, retweetCount)
 kable(head(tweets,50))
-tweets <- tweets %>% select(created, text, retweetCount) %>% group_by(created) %>% summarise(Retweets = sum(retweetCount))
-kable(tweets)
+tweetsCount <- tweets %>% select(created, text, retweetCount) %>% group_by(created) %>% summarise(Retweets = sum(retweetCount))
+kable(tweetsCount)
+kable(names(tweets))
 ```
 
 
 ```{r}
-tweets %>% ggplot(aes(created, Retweets)) + geom_col(fill ="#CC0000") + labs(x = "Day", y = "Number of Retweets") 
+tweetsCount %>% ggplot(aes(created, Retweets)) + geom_col(fill ="#CC0000") + labs(x = "Day", y = "Number of Retweets") 
 
 ```
 
@@ -86,3 +97,16 @@ tweet_words <- tweets %>%
 names(tweets)
 ```
 
+
+```{r, echo=FALSE}
+# dbRemoveTable(Tweets.sqlite, "TrumpTweets")
+# databaseTwitter <- dbConnect(SQLite(), dbname = "Tweets.sqlite")
+# dbSendQuery(conn = databaseTwitter, "PRAGMA foreign_keys = OFF")
+# dbSendQuery(conn = databaseTwitter,
+#             "CREATE TABLE TrumpTweets
+#             (created TEXT, 
+#             text TEXT,
+#             reTweetCount TEXT)")
+
+
+```
