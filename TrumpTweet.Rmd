@@ -1,0 +1,88 @@
+---
+title: "Trump's Reweets"
+author: "Christine Iyer"
+date: "February 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(knitr)
+library(twitteR)
+library(dplyr)
+library(tidytext)
+library(stringr)
+library(purrr)
+library(lubridate)
+library(scales)
+library(tidyr)
+library(ggplot2)
+library(forecast)
+
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+consumer_key <- "UsCe7XLj03gFbK3C3aILJA1vd"
+consumer_secret <- "dXrS7DFrvPErpm5LqjkibXFlkPBww7J4lJAOObk38b04tLGwvW"
+access_token <- "909252506-W4WONt5BJTg9tVkrtnVE4poh3cikfUZYc0wOrCMH"
+access_secret <- "e5tQ6yRwYzAXiGxanu0xyf7x0X36KtQMITtxPzbuLE1NK"
+setup_twitter_oauth(consumer_key, consumer_secret,
+                    access_token, access_secret)
+```
+
+```{r}
+trump_tweets <- userTimeline("POTUS", n = 5000)
+trump_tweets_df <- tbl_df(map_df(trump_tweets, as.data.frame))
+```
+
+```{r}
+tweets <- trump_tweets_df 
+tweets$created <- as.Date(tweets$created, format = "%Y-%m-%d")
+tweets <- tweets %>% select(created, text, retweetCount)
+kable(head(tweets,50))
+tweets <- tweets %>% select(created, text, retweetCount) %>% group_by(created) %>% summarise(Retweets = sum(retweetCount))
+kable(tweets)
+```
+
+
+```{r}
+tweets %>% ggplot(aes(created, Retweets)) + geom_col(fill ="#CC0000") + labs(x = "Day", y = "Number of Retweets") 
+
+```
+
+```{r, eval=FALSE, include=FALSE}
+tweets.ts <- ts(tweets$Retweets, start = c(2017, 2), end = c(2017,20), frequency = 365)
+plot(tweets.ts) 
+```
+
+```{r, eval=FALSE, include=FALSE}
+tweets %>%
+  count(source, hour = hour(with_tz(created, "EST"))) %>%
+  mutate(percent = n / sum(n)) %>%
+  ggplot(aes(hour, percent, color = source)) +
+  geom_line() +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "Hour of day (EST)",
+       y = "% of tweets",
+       color = "")
+```
+
+```{r, eval=FALSE, include=FALSE}
+reg <- "([^A-Za-z\\d#@']|'(?![A-Za-z\\d#@]))"
+tweet_words <- tweets %>%
+  filter(!str_detect(text, '^"')) %>%
+  mutate(text = str_replace_all(text, "https://t.co/[A-Za-z\\d]+|&amp;", "")) %>%
+  unnest_tokens(word, text, token = "regex", pattern = reg) %>%
+  filter(!word %in% stop_words$word,
+         str_detect(word, "[a-z]"))
+
+names(tweets)
+```
+

@@ -1,0 +1,147 @@
+---
+title: "CopyFormulas"
+author: "Christine Iyer"
+date: "February 17, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(forecast)
+```
+
+###Load the Data
+
+```{r}
+appliance <- read.csv("ApplianceShipments.csv", stringsAsFactors = FALSE) 
+head(appliance)
+tail(appliance)
+```
+
+
+###Data is out of order
+**remove the dash between year and quarter**
+
+```{r}
+# Split the column Quarter based on the "-"
+col1Split <- strsplit(appliance$Quarter,"-")
+head(col1Split)
+```
+
+### Create a data.frame with three columns:
+
+```{r}
+tempDF <- data.frame(matrix(unlist(col1Split), nrow=length(col1Split), byrow=T), appliance$Shipments) 
+tempDF
+```
+
+###Order according to year, then quarter
+
+```{r}
+# Order tempDF 
+tempDF <- tempDF[order(tempDF$X2,tempDF$X1),]
+# See if the sorting worked
+tempDF
+```
+
+###Put the quarter and year back together
+
+```{r}
+m <- paste0(tempDF$X1,"-",tempDF$X2)
+m
+```
+
+###Create new DF with just the 2 columns
+
+```{r}
+newDF <- data.frame(m, tempDF$appliance.Shipments)
+newDF
+```
+
+# Rename the first and second column
+
+```{r}
+names(newDF)[1] <- "Quarter"
+names(newDF)[2] <- "Shipments"
+head(newDF)
+```
+
+###Convert to time series
+
+```{r}
+appliance.ts <- ts(newDF$Shipments, start = c(1985,1), end = c(1989, 4), freq = 4)
+```
+
+###Plot
+
+```{r}
+plot(appliance.ts, xlab = "Year", ylab = "Shipments (millions of US$", ylim = c(3000, 5000), bty = "l")
+```
+
+###Trend
+
+```{r}
+appliance.lm <- tslm(appliance.ts ~ trend + I(trend^2))
+par(mfrow = c(2, 1))
+plot(appliance.ts, xlab = "Year", ylab = "Shipments", ylim = c(3000, 5000), bty = "l") 
+lines(appliance.lm$fitted, lwd = 2)
+```
+
+###Zoom helps suppress seasonality
+
+```{r}
+appliance.ts.zoom <- window(appliance.ts, start = c(1986,1), end = c(1988, 4))
+plot(appliance.ts.zoom, xlab = "Time", ylab = "Shipments (millions of US$", ylim = c(3000, 5000), bty = "l")
+```
+
+###Partition the data into training and validation periods for forecasting 
+**One year validation**
+
+```{r}
+applianceValidation <- 4
+applianceTraining <- length(appliance.ts) - applianceValidation
+```
+
+##Put partitions in windows
+
+###Training Window
+
+```{r}
+applianceTrainWindow <- window(appliance.ts, start = c(1985, 1), end = c(1985, applianceTraining))
+```
+
+###Validation Window
+
+```{r}
+applianceValidationWindow <- window(appliance.ts, start = c(1985, applianceTraining + 1), end = c(1985, applianceValidation + applianceTraining))
+appliance.lm <- tslm(applianceTrainWindow ~ trend + I(trend^2))
+appliance.lm.pred <- forecast(appliance.lm, h = applianceValidation, level = 0)
+plot(appliance.lm.pred, ylim = c(3000, 5000), xlab = "Year", ylab = "Shipments",bty = "l", xaxt = "n", xlim = c(1985,1989.25), main ="", flty = 2)
+labels = format(seq(1985, 1989,1))
+axis(1, at = seq(1985, 1989, 1), labels = format(seq(1985, 1989, 1)))
+lines(appliance.lm$fittled, lwd = 2)
+lines(applianceValidationWindow)
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+ lines(ridership.lm$fitted, lwd = 2) 
+lines(valid.ts)
+
+
+
