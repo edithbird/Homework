@@ -1,0 +1,135 @@
+---
+title: "AmtrakVerifucation"
+author: "Christine Iyer"
+date: "February 23, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(forecast)
+```
+
+```{r}
+Amtrak.data <- read.csv("Amtrak.csv") 
+ridership.ts <- ts(Amtrak.data$Ridership, start = c(1991,1), end = c(2004, 3), freq = 12) 
+head(Amtrak.data)
+```
+
+```{r}
+tail(Amtrak.data)
+```
+
+```{r}
+dim(Amtrak.data)
+```
+
+```{r}
+plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
+ridership.lm <- tslm(ridership.ts ~ trend + I(trend^2)) 
+par(mfrow = c(2, 1)) 
+plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l") 
+lines(ridership.lm$fitted, lwd = 2) 
+ridership.ts.zoom <- window(ridership.ts, start = c(1997, 1), end = c(2000, 12)) 
+plot(ridership.ts.zoom, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
+```
+
+```{r}
+nValid <- 36 
+nTrain <- length(ridership.ts) - nValid 
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain)) 
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid)) 
+ridership.lm <- tslm(train.ts ~ trend + I(trend^2)) 
+ridership.lm.pred <- forecast(ridership.lm, h = nValid, level = 0) 
+plot(ridership.lm.pred, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
+axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1))) 
+lines(ridership.lm$fitted, lwd = 2) 
+lines(valid.ts)
+
+```
+
+```{r}
+accuracy(ridership.lm.pred$mean, valid.ts)
+```
+
+```{r}
+names(ridership.lm.pred) 
+```
+
+```{r}
+ridership.lm.pred$residuals
+```
+
+```{r}
+valid.ts - ridership.lm.pred$mean
+```
+
+```{r}
+hist(ridership.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+```
+
+```{r}
+#Create a time series out of the data. 
+ridership.ets.AAN <- ets(ridership.ts, model = "AAN") 
+#Fit Model 1 to the time series.
+ridership.ets.MMN <- ets(ridership.ts, model = "MMN", damped = FALSE) 
+#Fit Model 2. 
+
+ridership.ets.MMdN <- ets(ridership.ts, model = "MMN", damped = TRUE) 
+#Fit Model 3. 
+ridership.ets.AAN.pred <- forecast(ridership.ets.AAN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+ridership.ets.MMN.pred <- forecast(ridership.ets.MMN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+ridership.ets.MMdN.pred <- forecast(ridership.ets.MMdN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+par(mfrow = c(1, 3)) 
+#This command sets the plot window to show 1 row of 3 plots.
+plot(ridership.ets.AAN.pred, xlab = "Month", ylab = "ridership (in millions)", ylim = c(1300, 2600)) 
+plot(ridership.ets.MMN.pred, xlab = "Month", ylab="ridership (in millions)", ylim = c(1300, 2600)) 
+plot(ridership.ets.MMdN.pred, xlab = "Month", ylab="ridership (in millions)", ylim = c(1300, 2600))
+```
+
+
+```{r}
+fixed.nValid <- 36 
+fixed.nTrain <- length(ridership.ts) - fixed.nValid 
+stepsAhead <- 1 
+error <- rep(0, fixed.nValid - stepsAhead + 1) 
+percent.error <- rep(0, fixed.nValid - stepsAhead + 1) 
+
+for(j in fixed.nTrain:(fixed.nTrain + fixed.nValid - stepsAhead)) { 
+  train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, j)) 
+  valid.ts <- window(ridership.ts, start = c(1991, j + stepsAhead), end = c(1991, j + stepsAhead)) 
+  naive.pred <- naive(train.ts, h = stepsAhead) 
+  error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead] 
+  percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
+  } 
+mean(abs(error)) 
+```
+
+```{r}
+sqrt(mean(error^2))
+```
+
+```{r}
+mean(abs(percent.error))
+```
+
+```{r}
+fixed.nValid <- 36 
+fixed.nTrain <- length(ridership.ts) - fixed.nValid 
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, fixed.nTrain)) 
+valid.ts <- window(ridership.ts, start = c(1991, fixed.nTrain + 1), end = c(1991, fixed.nTrain + fixed.nValid)) 
+naive.pred <- naive(train.ts, h = fixed.nValid)
+snaive.pred <- snaive(train.ts, h = fixed.nValid) 
+```
+
+```{r}
+accuracy(naive.pred, valid.ts)
+```
+
+```{r}
+accuracy(snaive.pred, valid.ts)
+```
+
