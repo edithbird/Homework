@@ -262,13 +262,13 @@ Qu1
 Qu2
 Qu3
 Qu4
-Combined <- c(4245,4990, 4585, 4533)
+Combined <- c(4245,4900, 4585, 4533)
 Combined.ts <- ts(Combined, start = c(1989,1), end = c(1989, 4), freq = 4)
 ```
 
 
 ```{r}
-plot(valid.ts, bty="l", xaxt="n", xlab="The Year 1989", yaxt="n", ylab="Shipments", ylim = c(4000, 8000))
+plot(valid.ts, bty="l", xaxt="n", xlab="The Year 1989", yaxt="n", ylab="Shipments", ylim = c(4000, 8000), lwd = 2)
 axis(1, at=seq(1989,1989.75,0.25), labels=c("Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"))
 axis(2, las=2)
 # Now add the forecasts and make the line red and dashed
@@ -276,10 +276,12 @@ lines(naive.pred$mean, col=2, lty=1)
 # Add a legend
 lines(snaive.pred$mean, col=3, lty=1)
 lines(shipments.lm.pred$mean, col = 4, lty = 1)
-lines(Combined.ts, col = 6, lty = 2)
+
+
+lines(Combined.ts, col = 6, lty = 1)
 
 # Add a legend
-legend(1989,8000, c("Actual","Naive", "SNaive", "Quad Trend", "Combined"), col=1:6, lty=1:5)
+legend(1989,8000, c("Actual","Naive", "SNaive", "Quad Trend", "ANN", "Combined"), col=1:6, lty=1:5)
 
 
 
