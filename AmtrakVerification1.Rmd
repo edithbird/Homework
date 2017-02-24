@@ -1,5 +1,5 @@
 ---
-title: "AmtrakVerifucation"
+title: "ApplianceVerification"
 author: "Christine Iyer"
 date: "February 23, 2017"
 output: html_document
@@ -13,94 +13,133 @@ knitr::opts_chunk$set(echo = TRUE)
 library(forecast)
 ```
 
+###Read in Data and summarize
 ```{r}
-Amtrak.data <- read.csv("Amtrak.csv") 
-ridership.ts <- ts(Amtrak.data$Ridership, start = c(1991,1), end = c(2004, 3), freq = 12) 
-head(Amtrak.data)
+Appliance.data <- read.csv("ApplianceShipmentsReordered.csv") 
+shipments.ts <- ts(Appliance.data$Shipments, start = c(1985,1), end = c(1989, 4), freq = 4) 
+head(Appliance.data)
+summary(Appliance.data)
+tail(Appliance.data)
+dim(Appliance.data)
 ```
 
+###Plot
 ```{r}
-tail(Amtrak.data)
+plot(shipments.ts, xlab = "Time", ylab = "shipments", ylim = c(3900, 5000), bty = "l")
 ```
 
+###Plot with trend and plot with zoom
 ```{r}
-dim(Amtrak.data)
-```
-
-```{r}
-plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
-ridership.lm <- tslm(ridership.ts ~ trend + I(trend^2)) 
+shipments.lm <- tslm(shipments.ts ~ trend + I(trend^2)) 
 par(mfrow = c(2, 1)) 
-plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l") 
-lines(ridership.lm$fitted, lwd = 2) 
-ridership.ts.zoom <- window(ridership.ts, start = c(1997, 1), end = c(2000, 12)) 
-plot(ridership.ts.zoom, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
+plot(shipments.ts, xlab = "Time", ylab = "shipments", ylim = c(3900, 5000), bty = "l") 
+lines(shipments.lm$fitted, lwd = 2) 
+shipments.ts.zoom <- window(shipments.ts, start = c(1986, 1), end = c(1988, 4)) 
+plot(shipments.ts.zoom, xlab = "Time", ylab = "shipments", ylim = c(3900, 5000), bty = "l")
+```
+
+
+###Forecasts in the validation period from a quadratic trend model estimated from the training period
+
+```{r}
+#quadratic model training and validation lengths
+nValid <- 4 
+shipments.ts
+nTrain <- length(shipments.ts) - nValid
+#quad model training and valid in windows
+train.ts <- window(shipments.ts, start = c(1985, 1), end = c(1985, nTrain))
+train.ts
+valid.ts <- window(shipments.ts, start = c(1985, nTrain + 1), end = c(1985, nTrain + nValid))
+valid.ts
+#quadratic trend
+shipments.lm <- tslm(train.ts ~ trend + I(trend^2))
+#forecast based on trend
+shipments.lm.pred <- forecast(shipments.lm, h = nValid, level = 0)
+#quadratic trend forecast
+shipments.lm.pred
+#quadratic error
+valid.ts - shipments.lm.pred$mean
+plot(shipments.lm.pred, ylim = c(3900, 5000), ylab = "shipments", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1985,1990.25), main ="", flty = 3)
+axis(1, at = seq(1985, 1990, 1), labels = format(seq(1985, 1990, 1)))
+lines(shipments.lm$fitted, lwd = 1)
+lines(valid.ts, lwd = 3)
+
+```
+
+###Accuracy measures for validation period forecast
+```{r}
+shipments.lm.pred
+accuracy(shipments.lm.pred$mean, valid.ts)
+```
+
+###Names
+```{r forecast object}
+names(shipments.lm.pred) 
 ```
 
 ```{r}
-nValid <- 36 
-nTrain <- length(ridership.ts) - nValid 
-train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain)) 
-valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid)) 
-ridership.lm <- tslm(train.ts ~ trend + I(trend^2)) 
-ridership.lm.pred <- forecast(ridership.lm, h = nValid, level = 0) 
-plot(ridership.lm.pred, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
-axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1))) 
-lines(ridership.lm$fitted, lwd = 2) 
-lines(valid.ts)
-
+shipments.lm.pred$residuals
 ```
 
+###Quadratic Error
 ```{r}
-accuracy(ridership.lm.pred$mean, valid.ts)
+valid.ts - shipments.lm.pred$mean
 ```
 
+###Histogram of Errors
 ```{r}
-names(ridership.lm.pred) 
+hist(shipments.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
 ```
 
-```{r}
-ridership.lm.pred$residuals
-```
 
-```{r}
-valid.ts - ridership.lm.pred$mean
-```
-
-```{r}
-hist(ridership.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
-```
 
 ```{r}
 #Create a time series out of the data. 
-ridership.ets.AAN <- ets(ridership.ts, model = "AAN") 
+shipments.ets.AAN <- ets(shipments.ts, model = "AAN")
+AAN <- ets(valid.ts,  model = "AAN")
+ANNfc <- forecast(AAN, h = nValid, level = 0)  
+
+
 #Fit Model 1 to the time series.
-ridership.ets.MMN <- ets(ridership.ts, model = "MMN", damped = FALSE) 
+shipments.ets.MMN <- ets(shipments.ts, model = "MMN", damped = FALSE)
+shipments.ets.MMN
+MMN <- ets(valid.ts,  model = "MMN")
+MMNfc <- forecast(MMN, h = nValid, level = 0)
 #Fit Model 2. 
 
-ridership.ets.MMdN <- ets(ridership.ts, model = "MMN", damped = TRUE) 
+shipments.ets.MMdN <- ets(shipments.ts, model = "MMN", damped = TRUE)
+shipments.ets.MMdN
+MMdN <- ets(valid.ts,  model = "MMN")
+MMdNfc <- forecast(MMdN, h = nValid, level = 0)
 #Fit Model 3. 
-ridership.ets.AAN.pred <- forecast(ridership.ets.AAN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
-ridership.ets.MMN.pred <- forecast(ridership.ets.MMN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
-ridership.ets.MMdN.pred <- forecast(ridership.ets.MMdN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+shipments.ets.AAN.pred <- forecast(shipments.ets.AAN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+#Accuracy AAN
+accuracy(shipments.ets.AAN.pred, nValid)
+shipments.ets.MMN.pred <- forecast(shipments.ets.MMN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+#Accuracy MMN
+accuracy(shipments.ets.MMN.pred, nValid)
+shipments.ets.MMdN.pred <- forecast(shipments.ets.MMdN, h = nValid, level = c(0.2, 0.4, 0.6, 0.8)) 
+shipments.ets.MMdN.pred
+#Accuracy MMdN
+accuracy(shipments.ets.MMdN.pred)
 par(mfrow = c(1, 3)) 
 #This command sets the plot window to show 1 row of 3 plots.
-plot(ridership.ets.AAN.pred, xlab = "Month", ylab = "ridership (in millions)", ylim = c(1300, 2600)) 
-plot(ridership.ets.MMN.pred, xlab = "Month", ylab="ridership (in millions)", ylim = c(1300, 2600)) 
-plot(ridership.ets.MMdN.pred, xlab = "Month", ylab="ridership (in millions)", ylim = c(1300, 2600))
+plot(shipments.ets.AAN.pred, xlab = "Quarter", ylab = "shipments (in millions)", ylim = c(3900, 5000)) 
+plot(shipments.ets.MMN.pred, xlab = "Quarter", ylab="shipments (in millions)", ylim = c(3900, 5000)) 
+plot(shipments.ets.MMdN.pred, xlab = "Quarter", ylab="shipments (in millions)", ylim = c(3900, 5000))
 ```
 
 
 ```{r}
-fixed.nValid <- 36 
-fixed.nTrain <- length(ridership.ts) - fixed.nValid 
+fixed.nValid <- 4 
+fixed.nTrain <- length(shipments.ts) - fixed.nValid 
 stepsAhead <- 1 
 error <- rep(0, fixed.nValid - stepsAhead + 1) 
 percent.error <- rep(0, fixed.nValid - stepsAhead + 1) 
 
 for(j in fixed.nTrain:(fixed.nTrain + fixed.nValid - stepsAhead)) { 
-  train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, j)) 
-  valid.ts <- window(ridership.ts, start = c(1991, j + stepsAhead), end = c(1991, j + stepsAhead)) 
+  train.ts <- window(shipments.ts, start = c(1985, 1), end = c(1985, j)) 
+  valid.ts <- window(shipments.ts, start = c(1985, j + stepsAhead), end = c(1985, j + stepsAhead)) 
   naive.pred <- naive(train.ts, h = stepsAhead) 
   error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead] 
   percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
@@ -117,10 +156,10 @@ mean(abs(percent.error))
 ```
 
 ```{r}
-fixed.nValid <- 36 
-fixed.nTrain <- length(ridership.ts) - fixed.nValid 
-train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, fixed.nTrain)) 
-valid.ts <- window(ridership.ts, start = c(1991, fixed.nTrain + 1), end = c(1991, fixed.nTrain + fixed.nValid)) 
+fixed.nValid <- 4 
+fixed.nTrain <- length(shipments.ts) - fixed.nValid 
+train.ts <- window(shipments.ts, start = c(1985, 1), end = c(1985, fixed.nTrain)) 
+valid.ts <- window(shipments.ts, start = c(1985, fixed.nTrain + 1), end = c(1985, fixed.nTrain + fixed.nValid)) 
 naive.pred <- naive(train.ts, h = fixed.nValid)
 snaive.pred <- snaive(train.ts, h = fixed.nValid) 
 ```
@@ -132,4 +171,134 @@ accuracy(naive.pred, valid.ts)
 ```{r}
 accuracy(snaive.pred, valid.ts)
 ```
+
+
+#Quad Error
+```{r}
+Quad <- hist(shipments.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="", ylim = c(0,8))
+
+# Use stored hist object to help set up density curve
+multiplier <- Quad$counts / Quad$density
+# Need to ignore NA from 1985
+Quadmydensity <- density(shipments.lm.pred$residuals, na.rm=TRUE)
+Quadmydensity$y <- Quadmydensity$y * multiplier[1]
+
+# Add the density curve
+lines(Quadmydensity)
+```
+
+#AAN Error
+```{r}
+AANhist <- hist(shipments.ets.AAN.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+# Use stored hist object to help set up density curve
+multiplier <- AANhist$counts / AANhist$density
+# Need to ignore NA from 1985
+AANmydensity <- density(shipments.ets.AAN.pred$residuals, na.rm=TRUE)
+AANmydensity$y <- AANmydensity$y * multiplier[1]
+
+# Add the density curve
+lines(AANmydensity)
+
+
+```
+
+#MMN Error 
+```{r}
+MMNhist <- hist(shipments.ets.MMN.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+
+# Use stored hist object to help set up density curve
+multiplier <- MMNhist$counts / MMNhist$density
+# Need to ignore NA from 1985
+MMNmydensity <- density(shipments.ets.MMN.pred$residuals, na.rm=TRUE)
+MMNmydensity$y <- MMNmydensity$y * multiplier[1]
+
+# Add the density curve
+lines(MMNmydensity)
+
+```
+
+# MMdN Error 
+```{r}
+MMdNhist <- hist(shipments.ets.MMdN.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+# Use stored hist object to help set up density curve
+multiplier <- MMdNhist$counts / MMdNhist$density
+# Need to ignore NA from 1985
+MMdNmydensity <- density(shipments.ets.MMdN.pred$residuals, na.rm=TRUE)
+MMdNmydensity$y <- AANmydensity$y * multiplier[1]
+
+# Add the density curve
+lines(MMdNmydensity)
+
+```
+
+#Naive Error
+```{r}
+Naivehist <-  hist(naive.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+multiplier <- Naivehist$counts / Naivehist$density
+# Need to ignore NA from 1985
+Naivemydensity <- density(naive.pred$residuals, na.rm=TRUE)
+Naivemydensity$y <- Naivemydensity$y * multiplier[1]
+
+# Add the density curve
+lines(Naivemydensity)
+```
+
+#SNaive Error
+```{r}
+SNaivehist <- hist(snaive.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+multiplier <- SNaivehist$counts / SNaivehist$density
+SNaivemydensity <- density(snaive.pred$residuals, na.rm=TRUE)
+SNaivemydensity$y <- SNaivemydensity$y * multiplier[1]
+lines(SNaivemydensity)
+```
+
+
+```{r}
+Qu1 <- mean(4245, 4258, 4595, 4409.468)
+Qu2 <- mean(4900, 4258, 4799, 4355.434)
+Qu3 <- mean(4585, 4258, 4417, 4291.984)
+Qu4 <- mean(4533,4258,4258,4219.148)
+Qu1
+Qu2
+Qu3
+Qu4
+Combined <- c(4245,4990, 4585, 4533)
+Combined.ts <- ts(Combined, start = c(1989,1), end = c(1989, 4), freq = 4)
+```
+
+
+```{r}
+plot(valid.ts, bty="l", xaxt="n", xlab="The Year 1989", yaxt="n", ylab="Shipments", ylim = c(4000, 8000))
+axis(1, at=seq(1989,1989.75,0.25), labels=c("Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"))
+axis(2, las=2)
+# Now add the forecasts and make the line red and dashed
+lines(naive.pred$mean, col=2, lty=1)
+# Add a legend
+lines(snaive.pred$mean, col=3, lty=1)
+lines(shipments.lm.pred$mean, col = 4, lty = 1)
+lines(Combined.ts, col = 6, lty = 2)
+
+# Add a legend
+legend(1989,8000, c("Actual","Naive", "SNaive", "Quad Trend", "Combined"), col=1:6, lty=1:5)
+
+
+
+```
+
+#Four Forecasts
+```{r}
+head(valid.ts)
+head(naive.pred$mean)
+head(snaive.pred$mean)
+head(shipments.lm.pred$mean)
+
+```
+
+
+
+
+
+
+
+
 
