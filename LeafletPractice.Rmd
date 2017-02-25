@@ -30,10 +30,8 @@ my_map
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 #https://cdn0.iconfinder.com/data/icons/education-flat-icons-set/128/school-building-512.png
-
 IconBear <- makeIcon(
   iconUrl = "http://www.gmkfreelogos.com/logos/G/img/Girls_Inc_.gif", iconWidth = 31*215/230, iconHeight = 31, iconAnchorX = 31*215/230/2, iconAnchorY = 16)
-
 School <- c("Comprehensive Model School Project, M.S.", "Angela Patri M.S.", "Bronx Green Middle School", "Jackie Robinson School, P.S. 375", "Franklin K. Lane H.S.", "Rockaway Collegiate H.S.", "Knowledge And Power Preparatory Academy VI")
 Address <- c("1501 JEROME Ave. Bronx, NY 10452", "2225 Webster Ave. Bronx, NY 10457", "2441 Wallace Ave. Bronx, NY 10467", "46 McKeever Pl. Brooklyn, NY 11225", "999 Jamaica Ave. Brooklyn, NY 11208", "100-00 Beach Channel Dr. Queens, NY 11694", "8-21 Bay 25 St. Queens, NY 11691")
 
@@ -44,14 +42,6 @@ SchoolSite <- c("<a href='http://schools.nyc.gov/SchoolPortals/09/X327/default.h
 "<a href='http://insideschools.org/component/schools/school/824'>Franklin K. Lane H.S.</a>",
 "<a href='http://schools.nyc.gov/SchoolPortals/27/Q351/default.htm'>Rockaway Collegiate H.S.</a>",
 "<a href='http://schools.nyc.gov/SchoolPortals/27/Q282/default.htm'>Knowledge And Power Preparatory Academy VI</a>")
-  
-
-  
-  
-  
-# # Rockaway http://schools.nyc.gov/SchoolPortals/27/Q351/default.htm
-# "<a '>Comprehensive Model School Project, M.S.</a>","<a 'href='http://schools.nyc.gov/SchoolPortals/10/X391/default.htm'>Angela Patri M.S.<>Address</a>", "<a' href = #'http://schools.nyc.gov/SchoolPortals/11/X326/default.htm'>Bronx Green Middle School", #"http://schools.nyc.gov/SchoolPortals/17/K375/default.htm","http://insideschools.org/component/schools/school/824", #"http://schools.nyc.gov/SchoolPortals/27/Q351/default.htm", "http://schools.nyc.gov/SchoolPortals/27/Q282/default.htm")
-
 #Convert JEROME to proper case
 Address <-  str_to_title(Address)
 E_Schools <- data.frame(School, Address, SchoolSite, stringsAsFactors = FALSE)
@@ -59,10 +49,6 @@ E_Sc_loc <- geocode(E_Schools$Address)
 E_Schools <- bind_cols(E_Schools, E_Sc_loc)
 nyc <- leaflet() %>% addProviderTiles("CartoDB.Positron") %>% addMarkers(lng = E_Schools$lon, lat = E_Sc_loc$lat, icon = IconBear, popup = E_Schools$SchoolSite)
 nyc
-# names <- c(data.frame(c("A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B")))
-# names
-# df <- data.frame(lat = runif(20, min = 43, max = 47), lng = runif(20, min = 66, max = 74))
-# df %>% leaflet() %>% addTiles() %>% addMarkers(icon = IconBear)
-# addMarkers(popup = c("A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B","A", "B"))
+
 ```
 
