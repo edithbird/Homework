@@ -30,17 +30,30 @@ library(knitr)
 Senators <- read.csv("Senate.csv", header = TRUE, stringsAsFactors = FALSE)
 #Senators <- -c(5:6)
 Senators <- Senators[-c(1), -c(5:7,12)]
-names(Senators)[1:9] <- c("Last", "First", "Party", "State", "ReelectionYear", "OfficeAddress", "Phone", "Website", "TwitterHandle")
+names(Senators)[1:9] <- c("First", "Last", "Party", "State", "ReelectionYear", "OfficeAddress", "Phone", "Website", "TwitterHandle")
 
 Senators$OfficeAddress <- paste0 (Senators$OfficeAddress,", Washington, DC 20510")
+Senators$Last <- paste0(Senators$Last, ", ", Senators$State, ", ", Senators$Website)
+
 row.names(Senators) <- NULL
 kable(Senators)
-senateLocation <- geocode(Senators$State)
+senateLocation <- geocode(Senators$OfficeAddress)
 Senate <- bind_cols(Senators, senateLocation)
 IconBear <- makeIcon(
   iconUrl = "http://ronaldslabbers.com/wp-content/uploads/2012/11/pictogram-WAML-capitol-building.gif", iconWidth = 31*215/230, iconHeight = 31, iconAnchorX = 31*215/230/2, iconAnchorY = 16)
-IconOffice <- 
-Office <- leaflet() %>% addProviderTiles("CartoDB.Positron") %>% addMarkers(lng = Senate$lon, lat = Senate$lat, icon = IconBear, popup = Senate$Last)
+
+
+
+    
+   
+
+
+Office <- leaflet() %>% addProviderTiles("CartoDB.Positron") %>% addMarkers(
+    lng = Senate$lon,
+    lat = Senate$lat,
+    clusterOptions = markerClusterOptions(),
+    icon = IconBear,
+    popup = Senate$Last, Senate$State, Senate$Website)
 Office
 
 
