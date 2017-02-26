@@ -18,20 +18,31 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         numericInput("numeric",
-                     "How many numbers should we plot?",
-                     value = 1000,
+         numericInput("numeric1",
+                     "Round 1 Score",
+                     value = 100,
                      min = 1,
-                     max = 50,
+                     max = 100,
                      step = 1), 
-         
-         
-         
-         sliderInput("sliderX", "Pick minimum and maximum X values", -100, 100, value = c(-50, 50)),
-         sliderInput("sliderY", "Pick minimum and maximum Y values", -100, 100, value = c(-50, 50)),
-         checkboxInput("show_xlab", "Show/Hide X axis label", value = TRUE), 
-         checkboxInput("show_ylab", "Show/Hide Y axis label", value = TRUE), 
-         checkboxInput("show_title", "Show/Hide Title")
+         numericInput("numeric2",
+                      "Round 2 Score",
+                      value = 100,
+                      min = 1,
+                      max = 100,
+                      step = 1),
+         numericInput("numeric3",
+                      "Round 3 Score",
+                      value = 100,
+                      min = 1,
+                      max = 100,
+                      step = 1)
+         # 
+         # 
+         # sliderInput("sliderX", "Pick minimum and maximum X values", -100, 100, value = c(-50, 50)),
+         # sliderInput("sliderY", "Pick minimum and maximum Y values", -100, 100, value = c(-50, 50)),
+         # checkboxInput("show_xlab", "Show/Hide X axis label", value = TRUE), 
+         # checkboxInput("show_ylab", "Show/Hide Y axis label", value = TRUE), 
+         # checkboxInput("show_title", "Show/Hide Title")
          
       ),
       
@@ -47,18 +58,14 @@ ui <- fluidPage(
 server <- function(input, output) {
    
    output$plot1 <- renderPlot({
-     set.seed(2017-02-25)
-     number_of_points <- input$numeric
-     minX <- input$sliderX[1]
-     maxX <- input$sliderX[2]
-     minY <- input$sliderY[1]
-     maxY <- input$sliderY[2]
-     dataX <- runif(number_of_points, minX, maxX)
-     dataY <- runif(number_of_points, minY, maxY)
-     xlab <- ifelse(input$show_xlab, "X Axis", "")
-     ylab <- ifelse(input$show_ylab, "Y Axis", "")
-     main <- ifelse(input$show_title, "Title", "")
-     plot(dataX, dataY, xlab = xlab, ylab = ylab, main = main, xlim = c(-100, 100), ylim = c(-100, 100), col = "blue")
+     #set.seed(2017-02-25)
+     #number_of_points <- input$numeric
+     
+     R1 <- input$numeric1
+     R2 <- input$numeric2
+     R3 <- input$numeric3
+     dfAll <- data.frame(R1, R2, R3)
+  barplot(dfAll, ~R1 ~R2 ~R3)
       
    })
 }
