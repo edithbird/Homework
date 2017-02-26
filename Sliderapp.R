@@ -12,63 +12,85 @@ library(shiny)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
-   # Application title
-   titlePanel("Plot"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-         numericInput("numeric1",
-                     "Round 1 Score",
-                     value = 100,
-                     min = 1,
-                     max = 100,
-                     step = 1), 
-         numericInput("numeric2",
-                      "Round 2 Score",
-                      value = 100,
-                      min = 1,
-                      max = 100,
-                      step = 1),
-         numericInput("numeric3",
-                      "Round 3 Score",
-                      value = 100,
-                      min = 1,
-                      max = 100,
-                      step = 1)
-         # 
-         # 
-         # sliderInput("sliderX", "Pick minimum and maximum X values", -100, 100, value = c(-50, 50)),
-         # sliderInput("sliderY", "Pick minimum and maximum Y values", -100, 100, value = c(-50, 50)),
-         # checkboxInput("show_xlab", "Show/Hide X axis label", value = TRUE), 
-         # checkboxInput("show_ylab", "Show/Hide Y axis label", value = TRUE), 
-         # checkboxInput("show_title", "Show/Hide Title")
-         
-      ),
+  titlePanel("Horespower prediction"),
+  
+  # Sidebar with a slider input for number of bins 
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("sliderMPG",
+                  "Enter Car's MPG",10,35,value = 20), 
+      checkboxInput("showModel1",
+                    "Show/Hide Model 1:",
+                    value = TRUE),
+      checkboxInput("showModel2",
+                    "Show/Hide Model 2",
+                    value = TRUE)
+    ),
+    
+    mainPanel(
+      plotOutput("plot1"),
+      h3("Predict HP from Model 1"),
+      textOutput("pred1"),
+      h3("Predict HP from Model 2"),
+      textOutput("pred2")
       
-      # Show a plot of the generated distribution
-      mainPanel(
-        h3("Graph of Random Points"), 
-         plotOutput("plot1")
-      )
-   )
+    )
+  )
+  
+  
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
-   output$plot1 <- renderPlot({
-     #set.seed(2017-02-25)
-     #number_of_points <- input$numeric
-     
-     R1 <- input$numeric1
-     R2 <- input$numeric2
-     R3 <- input$numeric3
-     dfAll <- data.frame(R1, R2, R3)
-  barplot(dfAll, ~R1 ~R2 ~R3)
-      
-   })
+  mtcars$mpgsp <- ifelse(mtcars$mpg - 20 > 0, mtcars$mpg - 20, 0)
+  model1 <- lm(hp ~ mpg, data = mtcars)
+  model2 <- lm(hp ~ mpgsp + mpg, data = mtcars)
+  
+  model1pred <- reactive({
+    mpgInput <- input$sliderMPG
+    predict(model1, newdata = data.frame(mpg = mpgInput))
+  })
+  
+  model2pred <- reactive({
+    mpgInput <- input$sliderMPG
+    predict(model2, newdata = 
+              data.frame(mpg = mpgInput,
+                         mpgsp = ifelse(mpgInput - 20 > 0,
+                                        mpgInput - 20, 0)))
+  })
+  
+  output$plot1 <- renderPlot({
+    mpgInput <- input$sliderMPG
+    
+    plot(mtcars$mpg, mtcars$hp, xlab = "Miles Per Gallon", 
+         ylab = "Horsepower", bty = "n", pch = 16,
+         xlim = c(10, 35), ylim = c(50, 350))
+    if(input$showModel1){
+      abline(model1, col = "red", lwd = 2)
+    }
+    if(input$showModel2){
+      model2lines <- predict(model2, newdata = data.frame(
+        mpg = 10:35, mpgsp = ifelse(10:35 - 20 > 0, 10:35 - 20, 0)
+      ))
+      lines(10:35, model2lines, col = "blue", lwd = 2)
+    }
+    
+    legend(25, 250, c("Model 1 Prediction", "Model 2 Prediction"), pch = 16, 
+           col = c("red", "blue"), bty = "n", cex = 1.2)
+    points(mpgInput, model1pred(), col = "red", pch = 16, cex = 2)
+    points(mpgInput, model2pred(), col = "blue", pch = 16, cex = 2)
+  })
+  
+  output$pred1 <- renderText({
+    model1pred()
+  })
+  
+  output$pred2 <- renderText({
+    model2pred()
+  })
 }
+
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
