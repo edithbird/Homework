@@ -18,8 +18,11 @@ shinyUI(fluidPage(
       
       tableOutput("totals")
     )),
-  fluidRow(
-    column(3, offset = 3,
+  
+  
+  
+  fixedRow(
+    column(2, offset = 3,
            h4("Player 1"),
            numericInput('R1_Pl', 'Round 1 Score', 
                         min=-15, max=60, value=10),
@@ -40,7 +43,7 @@ shinyUI(fluidPage(
            
            
     ),
-    column(3, offset = 3,
+    column(2, offset = 4,
            h4("Player 2"),
            numericInput('R1_P2', 'Round 1 Score', 
                         min=-15, max=60, value=10),
@@ -58,6 +61,56 @@ shinyUI(fluidPage(
                         min=-15, max=60, value=10),
            numericInput('R8_P2', 'Round 8 Score', 
                         min=-15, max=60, value=10) 
+           
+           
+           
+    ), 
+    
+    
+    
+    
+    
+    
+    
+    
+    column(2, offset = 3,
+           h4("Longest?"), 
+           
+           #inputId, label, value 
+           checkboxInput('P11', "Longest R 1?"),
+           checkboxInput('P12', "Longest R 2?"),
+           checkboxInput('P13', "Longest R 3?"),
+           checkboxInput('P14', "Longest R 4?"),
+           checkboxInput('P15', "Longest R 5?"),
+           checkboxInput('P16', "Longest R 6?"),
+           checkboxInput('P17', "Longest R 7?"),
+           checkboxInput('P18', "Longest R 8?")
+           
+           
+           
+           
+           
+           
+           
+    ),
+    
+    
+    column(2, offset = 4,
+           h4("Longest?"), 
+           
+           #inputId, label, value 
+           checkboxInput('P21', "Longest R 1?"),
+           checkboxInput('P22', "Longest R 2?"),
+           checkboxInput('P23', "Longest R 3?"),
+           checkboxInput('P24', "Longest R 4?"),
+           checkboxInput('P25', "Longest R 5?"),
+           checkboxInput('P26', "Longest R 6?"),
+           checkboxInput('P27', "Longest R 7?"),
+           checkboxInput('P28', "Longest R 8?")
+           
+           
+           
+           
            
            
            
