@@ -1,0 +1,44 @@
+---
+title: "Quiddler"
+author: "Christine Iyer"
+date: "February 26, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
+ScorePl1 <- c(55,76,78,34,23,56,65,65)
+ScorePl2 <- c(43,56,76,78,54,23,65,56)
+longestWord1 <- c(T,T,F,F,F,T,F,F)
+longestWord2 <- c(F,F,T,T,T,F,T,T)
+Game <- data.frame(Round, ScorePl1, ScorePl2, longestWord1, longestWord2)
+Game
+#Games <- table(Game$Round, Game$ScorePl1)
+Player1plot <- barplot(Game$ScorePl1, main="Player 1 Summary", xlab="Round", ylab="Player 1 Scores", names.arg=c("1","2","3","4","5","6","7", "8"),
+        border="green", col = "blue"
+        #, density=c(90, 70, 50, 40, 30, 20, 10, 80)
+        )
+
+Player1Final <- sum(Game$ScorePl1)
+Player1Final
+Player1FinalScore <- sum(Game$longestWord1)*5 + Player1Final
+Player1FinalScore
+
+#Games <- table(Game$Round, Game$ScorePl1)
+Player2plot <- barplot(Game$ScorePl2, main="Player 2 Summary", xlab="Round Number", ylab="Player 2 Scores", names.arg=c("1","2","3","4","5","6","7", "8"),
+        border="blue", density=c(90, 70, 50, 40, 30, 20, 10, 80))
+
+
+Player2Final <- sum(Game$ScorePl2)
+Player2Final
+Player2FinalScore <- sum(Game$longestWord2)*5 + Player2Final
+Player2FinalScore
+
+```
+
+
