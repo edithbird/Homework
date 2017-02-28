@@ -168,14 +168,14 @@ server <- function(input, output) ({
   output$barplot3 <- renderPlot({
     cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
     Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
-    ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
-    ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
+    #ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
+    #ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
     ScorePl3 <- c(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
-    Data <- data.frame(Round, ScorePl1, ScorePl2, ScorePl3)
+    Data <- data.frame(Round, ScorePl3)
     
     
     
-    ggplot(Data, aes(x = Round, y = ScorePl2)) + geom_bar(stat = "identity", size = 2, fill = "red") + 
+    ggplot(Data, aes(x = Round, y = ScorePl3)) + geom_bar(stat = "identity", size = 2, fill = "red") + 
       labs(x="Round", y="Score") +
       scale_fill_hue(c=45, l=80) + #labs(title = "Player 3 Score") + 
       ylim(-15, 80) + theme(panel.grid.major = element_blank(),
