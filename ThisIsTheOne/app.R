@@ -9,7 +9,7 @@ ui <- fluidPage(
   mainPanel(
     fluidRow(
       column(4, 
-             h2("Player 1"), 
+             h2("Blue"), 
              numericInput("integer1", "Round 1:",
                           min=-15, max=60, value=0),
              
@@ -36,8 +36,8 @@ ui <- fluidPage(
              
              
       ), 
-      column(4, #offset = 2, 
-             h2("Player 2"), 
+      column(4,  
+             h2("Yellow"), 
              numericInput("integer2", "Round 1:", 
                           min=-15, max=60, value=0),
              numericInput("integer4", "Round 2:",
@@ -57,7 +57,7 @@ ui <- fluidPage(
       ),
       
       column(4, 
-             h2("Player 3"), 
+             h2("Red"), 
              numericInput("integer17", "Round 1:", 
                           min=-15, max=60, value=0),
              numericInput("integer18", "Round 2:",
@@ -88,15 +88,15 @@ ui <- fluidPage(
              h2("Scores"
                 ), 
       tableOutput("table1")),
-      column(4,
-             h2("Player 1"),
-      plotOutput("barplot")),
-      column(4, 
-             h2("Player 2"),
-      plotOutput("barplot2")),
-      column(4,
-             h2("Player 3"),
-      plotOutput("barplot3")), 
+      #column(4,
+            # h2("Player 1"),
+      #plotOutput("barplot")),
+      #column(4, 
+             #h2("Player 2"),
+      #plotOutput("barplot2")),
+      #column(4,
+             h2("Score"),
+      #plotOutput("barplot3")), 
       #tableOutput("table2"), 
       plotOutput("barplot4")
       
@@ -108,66 +108,66 @@ server <- function(input, output) ({
   
   output$table1 <- renderTable({
     data.frame(
-      #Name = c("Player 1", "Player 2"), 
+       
       Player1 =  sum(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15), 
       Player2 =  sum(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16),
       Player3 = sum(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
       
     )})
   
-  output$barplot <- renderPlot({
-    #rainbowcols <- rainbow(8)
-    color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
-    
-    Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
-    ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
-    ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
-    
-    Data <- data.frame(Round, ScorePl1, ScorePl2)
-    
-    
-    ggplot(Data, aes(x=Round, y=ScorePl1)) + geom_bar(stat = "identity",  size = 2, fill = color) + #"slateblue3"
-      labs(x="Round", y="Score") +
-      scale_fill_hue(c=45, l=80) +  #labs(title = "Player 1 Score") + 
-      ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
-      
-     }) 
+  # output$barplot <- renderPlot({
+  #   #rainbowcols <- rainbow(8)
+  #   color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
+  #   
+  #   Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
+  #   ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
+  #   ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
+  #   
+  #   Data <- data.frame(Round, ScorePl1, ScorePl2)
+  #   
+  #   
+  #   ggplot(Data, aes(x=Round, y=ScorePl1)) + geom_bar(stat = "identity",  size = 2, fill = color) + #"slateblue3"
+  #     labs(x="Round", y="Score") +
+  #     scale_fill_hue(c=45, l=80) +  #labs(title = "Player 1 Score") + 
+  #     ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
+  #     
+  #    }) 
+  # 
+  # output$barplot2 <- renderPlot({
+  #   color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
+  #   rainbowcols <- rainbow(8)
+  #   Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
+  #   ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
+  #   ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
+  #   ScorePl3 <- c(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
+  #   Data <- data.frame(Round, ScorePl1, ScorePl2, ScorePl3)
+  #   
+  #   
+  #   ggplot(Data, aes(x = Round, y = ScorePl2)) + geom_bar(stat = "identity", size = 2, fill = color) + #"yellow
+  #     labs(x="Round", y="Score") +
+  #     scale_fill_hue(c=45, l=80) +
+  #     ylim(-15, 80) + theme(panel.grid.major = element_blank(),
+  #   panel.grid.minor = element_blank(),
+  #   panel.border = element_blank(),
+  #   panel.background = element_blank())
+  # })
   
-  output$barplot2 <- renderPlot({
-    color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
-    rainbowcols <- rainbow(8)
-    Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
-    ScorePl1 <- c(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15)
-    ScorePl2 <- c(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16)
-    ScorePl3 <- c(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
-    Data <- data.frame(Round, ScorePl1, ScorePl2, ScorePl3)
-    
-    
-    ggplot(Data, aes(x = Round, y = ScorePl2)) + geom_bar(stat = "identity", size = 2, fill = color) + #"yellow
-      labs(x="Round", y="Score") +
-      scale_fill_hue(c=45, l=80) +
-      ylim(-15, 80) + theme(panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.border = element_blank(),
-    panel.background = element_blank())
-  })
   
-  
-  output$barplot3 <- renderPlot({
-    color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
-    rainbowcols <- rainbow(8)
-    Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
-    ScorePl3 <- c(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
-    Data <- data.frame(Round, ScorePl3)
-    
-    
-    
-    ggplot(Data, aes(x = Round, y = ScorePl3)) + geom_bar(stat = "identity", size = 2, fill = color) + 
-      labs(x="Round", y="Score") +
-      scale_fill_hue(c=45, l=80) + 
-      ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
-  
-  })
+  # output$barplot3 <- renderPlot({
+  #   color <- c("slateblue3", "yellow", "red","slateblue3", "yellow", "red","slateblue3","red")
+  #   rainbowcols <- rainbow(8)
+  #   Round <- c("1", "2", "3", "4", "5", "6", "7", "8")
+  #   ScorePl3 <- c(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
+  #   Data <- data.frame(Round, ScorePl3)
+  #   
+  #   
+  #   
+  #   ggplot(Data, aes(x = Round, y = ScorePl3)) + geom_bar(stat = "identity", size = 2, fill = color) + 
+  #     labs(x="Round", y="Score") +
+  #     scale_fill_hue(c=45, l=80) + 
+  #     ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
+  # 
+  # })
   
   # output$table2 <- renderTable({
   #   data.frame(
@@ -183,7 +183,10 @@ server <- function(input, output) ({
      DF <- data.frame(Player, Round_Number, Score)
 
      ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + geom_bar(stat = "identity", size = 2, position = "dodge") + 
-       scale_fill_manual(values=c("slateblue3", "yellow", "red"))
+       scale_fill_manual(values=c("slateblue3", "yellow", "red")) + 
+       labs(x="Round", y="Score") +
+       #scale_fill_hue(c=45, l=80) + 
+       ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
    })
 })
  
