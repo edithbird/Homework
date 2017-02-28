@@ -96,7 +96,9 @@ ui <- fluidPage(
       plotOutput("barplot2")),
       column(4,
              h2("Player 3"),
-      plotOutput("barplot3"))
+      plotOutput("barplot3")), 
+      #tableOutput("table2"), 
+      plotOutput("barplot4")
       
     )    
     
@@ -166,6 +168,23 @@ server <- function(input, output) ({
       ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
   
   })
+  
+  # output$table2 <- renderTable({
+  #   data.frame(
+  #     Round_Number = c("1", "2", "3", "4", "5", "6", "7", "8", "1", "2", "3", "4", "5", "6", "7", "8", "1", "2", "3", "4", "5", "6", "7", "8"), 
+  #     Player = c("1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3"), 
+  #     Score = c(input$integer1, input$integer2, input$integer17, input$integer3, input$integer4, input$integer18, input$integer5, input$integer6, input$integer19, input$integer7, input$integer8, input$integer20, input$integer9, input$integer10, input$integer21, input$integer11, input$integer12, input$integer22, input$integer13, input$integer14, input$integer23, input$integer15, input$integer16, input$integer24)
+  #    )
+  #   })
+   output$barplot4 <- renderPlot({
+     Round_Number = c("1", "1", "1", "2", "2", "2", "3", "3", "3", "4", "4", "4", "5", "5", "5", "6", "6", "6", "7", "7", "7", "8", "8", "8") 
+     Player = c("1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3")
+     Score = c(input$integer1, input$integer2, input$integer17, input$integer3, input$integer4, input$integer18, input$integer5, input$integer6, input$integer19, input$integer7, input$integer8, input$integer20, input$integer9, input$integer10, input$integer21, input$integer11, input$integer12, input$integer22, input$integer13, input$integer14, input$integer23, input$integer15, input$integer16, input$integer24)
+     DF <- data.frame(Player, Round_Number, Score)
+
+     ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + geom_bar(stat = "identity", size = 2, position = "dodge") + 
+       scale_fill_manual(values=c("slateblue3", "yellow", "red"))
+   })
 })
  
 shinyApp(ui = ui, server = server)
