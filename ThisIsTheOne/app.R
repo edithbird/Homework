@@ -109,9 +109,15 @@ server <- function(input, output) ({
   output$table1 <- renderTable({
     data.frame(
        
-      Player1 =  sum(input$integer1,input$integer3, input$integer5,input$integer7,input$integer9, input$integer11,input$integer13,input$integer15), 
-      Player2 =  sum(input$integer2,input$integer4, input$integer6,input$integer8,input$integer10, input$integer12,input$integer14,input$integer16),
-      Player3 = sum(input$integer17,input$integer18, input$integer19,input$integer20,input$integer21, input$integer22,input$integer23,input$integer24)
+      Player1 =  sum(input$integer1,input$integer3, input$integer5,
+                     input$integer7,input$integer9, input$integer11,
+                     input$integer13,input$integer15), 
+      Player2 =  sum(input$integer2,input$integer4, input$integer6,
+                     input$integer8,input$integer10, input$integer12,
+                     input$integer14,input$integer16),
+      Player3 = sum(input$integer17,input$integer18, input$integer19,
+                    input$integer20,input$integer21, input$integer22,
+                    input$integer23,input$integer24)
       
     )})
   
@@ -177,16 +183,43 @@ server <- function(input, output) ({
   #    )
   #   })
    output$barplot4 <- renderPlot({
-     Round_Number = c("1", "1", "1", "2", "2", "2", "3", "3", "3", "4", "4", "4", "5", "5", "5", "6", "6", "6", "7", "7", "7", "8", "8", "8") 
-     Player = c("1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", "3")
-     Score = c(input$integer1, input$integer2, input$integer17, input$integer3, input$integer4, input$integer18, input$integer5, input$integer6, input$integer19, input$integer7, input$integer8, input$integer20, input$integer9, input$integer10, input$integer21, input$integer11, input$integer12, input$integer22, input$integer13, input$integer14, input$integer23, input$integer15, input$integer16, input$integer24)
+     
+     blue.bold.italic.16.text <- element_text(face = "bold", color = "black", size = 14)
+     
+     axisTitle <- element_text(face = "bold", color = "black", size = 16)
+     
+     
+     Round_Number = c("1", "1", "1", "2", "2", "2", "3", "3", "3", 
+                      "4", "4", "4", "5", "5", "5", "6", "6", "6", 
+                      "7", "7", "7", "8", "8", "8") 
+     
+     Player = c("1", "2", "3", "1", "2", "3", "1", "2", "3", "1", 
+                "2", "3", "1", "2", "3", "1", "2", "3", "1", "2", 
+                "3", "1", "2", "3")
+     
+     Score = c(input$integer1, input$integer2, input$integer17, 
+               input$integer3, input$integer4, input$integer18, input$integer5, 
+               input$integer6, input$integer19, input$integer7, input$integer8, 
+               input$integer20, input$integer9, input$integer10, input$integer21, 
+               input$integer11, input$integer12, input$integer22, input$integer13, 
+               input$integer14, input$integer23, input$integer15, input$integer16, 
+               input$integer24)
+     
      DF <- data.frame(Player, Round_Number, Score)
 
-     ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + geom_bar(stat = "identity", size = 2, position = "dodge") + 
+     ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + 
+       geom_bar(stat = "identity", size = 2, position = "dodge") + 
        scale_fill_manual(values=c("slateblue3", "yellow", "red")) + 
        labs(x="Round", y="Score") +
        #scale_fill_hue(c=45, l=80) + 
-       ylim(-15, 80) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border = element_blank(), panel.background = element_blank())
+       ylim(-15, 80) + theme(panel.grid.major = element_blank(), 
+                             panel.grid.minor = element_blank(), 
+                             panel.border = element_blank(), 
+                             panel.background = element_blank(), 
+                             axis.text.x = blue.bold.italic.16.text, 
+                             axis.text.y = blue.bold.italic.16.text, 
+                             axis.title.x = axisTitle, 
+                             axis.title.y = axisTitle)
    })
 })
  
