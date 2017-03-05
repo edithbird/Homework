@@ -40,7 +40,7 @@ appCSS <- ".mandatory_star { color: red; }"
 
 responsesDirectory <- file.path("C:\Users\Chris Iyer\Documents\responses.csv")
 
-humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+#humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
 ui <- fluidPage(
   shinyjs::useShinyjs(),
@@ -126,7 +126,17 @@ ui <- fluidPage(
                tableOutput("table1")),
         
         h2("Score"),
-        plotOutput("barplot4")
+        plotOutput("barplot4"),
+        
+        
+        div(id = "form", ...),
+        shinyjs::hidden(
+          div(
+            id = "thankyou_msg",
+            h3("Thanks, your response was submitted successfully!"),
+            actionLink("submit_another", "Submit another response")
+          )
+        )
         
       )
     )
@@ -259,7 +269,7 @@ server <- function(input, output) ({
   
   saveData <- function(data){
     fileName <- sprintf("%s_%s.csv",
-                        humanTime(),
+                        #humanTime(),
                         digest::digest(data))
     
     write.csv(x = data, file = file.path(responsesDir, fileName),
@@ -269,6 +279,22 @@ server <- function(input, output) ({
   observeEvent(input$submit, {
     saveData(formData())
   })
+  
+    
+  
+  observeEvent(input$submit, {
+    saveData(formData())
+    shinyjs::reset("form")
+    shinyjs::hide("form")
+    #shinyjs::show("thankyou_msg")
+  }) 
+  
+  observeEvent(input$submit_another, {
+    shinyjs::show("form")
+    #shinyjs::hide("thankyou_msg")
+  }) 
+  
+  
 })
 
 
