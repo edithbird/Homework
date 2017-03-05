@@ -1,11 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
 
 library(shiny)
 library(DT)
@@ -38,7 +31,9 @@ labelMandatory <- function(label) {
 }
 appCSS <- ".mandatory_star { color: red; }"
 
-responsesDirectory <- file.path("C:\Users\Chris Iyer\Documents\responses.csv")
+responsesDirectory <- file.path("/Users/Chris Iyer/Documents/responses.csv", row.names = TRUE)
+
+
 
 #humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
@@ -126,17 +121,17 @@ ui <- fluidPage(
                tableOutput("table1")),
         
         h2("Score"),
-        plotOutput("barplot4"),
+        plotOutput("barplot4")
         
         
-        div(id = "form", ...),
-        shinyjs::hidden(
-          div(
-            id = "thankyou_msg",
-            h3("Thanks, your response was submitted successfully!"),
-            actionLink("submit_another", "Submit another response")
-          )
-        )
+        # div(id = "form", ...),
+        # shinyjs::hidden(
+        #   div(
+        #     id = "thankyou_msg",
+        #     h3("Thanks, your response was submitted successfully!"),
+        #     actionLink("submit_another", "Submit another response")
+        #   )
+        # )
         
       )
     )
