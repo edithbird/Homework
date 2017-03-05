@@ -12,69 +12,69 @@ ui <- fluidPage(
       column(4, 
              h2("Paul"), 
              numericInput("integer1", "Round 1:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer3", "Round 2:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer5", "Round 3:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer7", "Round 4:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer9", "Round 5:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer11", "Round 6:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer13", "Round 7:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              
              numericInput("integer15", "Round 8:", 
-                          min=-15, max=60, value=0)
+                          min=-15, max=80, value=0)
              
              
       ), 
       column(4,  
              h2("Jeff"), 
              numericInput("integer2", "Round 1:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer4", "Round 2:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer6", "Round 3:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer8", "Round 4:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer10", "Round 5:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer12", "Round 6:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer14", "Round 7:", 
-                          min=-15, max=60, value=0), 
+                          min=-15, max=80, value=0), 
              numericInput("integer16", "Round 8:", 
-                          min=-15, max=60, value=0)
+                          min=-15, max=80, value=0)
       ),
       
       column(4, 
              h2("Chris"), 
              numericInput("integer17", "Round 1:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer18", "Round 2:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer19", "Round 3:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer20", "Round 4:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer21", "Round 5:",
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer22", "Round 6:", 
-                          min=-15, max=60, value=0),
+                          min=-15, max=80, value=0),
              numericInput("integer23", "Round 7:", 
-                          min=-15, max=60, value=0), 
+                          min=-15, max=80, value=0), 
              numericInput("integer24", "Round 8:", 
-                          min=-15, max=60, value=0)
+                          min=-15, max=80, value=0)
       ),
  
       column(12, offset = 4,
