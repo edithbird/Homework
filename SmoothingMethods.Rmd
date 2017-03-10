@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 ```{r}
 library(forecast)
 library(zoo)
+library(knitr)
 ridership <- read.csv("Amtrak.csv")
 ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
 tail(ridership)
@@ -105,12 +106,43 @@ lines(valid.ts)
 
 3. Differencing
 
-```{r}
-diff(diff(ridership.ts, lag = 12), lag = 1)
+*$$lag_1$$ is useful to remove the trend. 
 
+*page 85
+
+*There's a lag, $$lag_1$$ is a 1 time lag, the difference between two consecutive values in a series. Doesn't have to be a  $$lag_1$$, can be a $$lag_k$$. A $$lag_7$$ means subtracting from each value
+the value on the same day in the previous week. $$lag_1$$ results in a series that measures the changes from one period to the next. 
+
+*For quadratic and exponential trends, often have to apply another round of $$lag_1$$ diffrencing to remove the trend. 
+
+*To remove monthly, $$lag-12$$
+
+*To remove seasonality then trend, $$lag-12$$ then $$lag-1$$
+
+
+
+```{r}
+diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
 ```
+
+
+4. Simple Exponential Smoothing
+
+
+*Like moving average, but weighted average of all past values so weights decrease exponentially into the past to give more weight to recent data, but not ignore the past altogether. 
 
 *Like the moving average, simple exponential smoothing should only be used for forecasting series that have no trend or seasonality.
 
+*Again, can use differencing to remove seasonality and/or trend and then apply exponential smoothing to the residuals. 
+
+5. Advanced Exponential Smoothing
+
+*Can deal with data that has trend and seasonality
+
+* **Additive trend:** the level changes from one period to the next by a fixed amount. 
+
+* **Multiplicative trend:** the level changes from one period to the next by a factor. 
+
+* **Hole Winter's Exponential Smoothing:** Useful for series that contain trend and seasonality. This method is adaptive and allows the level, trend, and seasonality to change over time.  
 
 
