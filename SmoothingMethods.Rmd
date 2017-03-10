@@ -1,0 +1,116 @@
+---
+title: "Smoothing Methods"
+author: "Christine Iyer"
+date: "March 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(forecast)
+library(zoo)
+ridership <- read.csv("Amtrak.csv")
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+tail(ridership)
+```
+
+###2 Types of Moving Averages
+**The difference between the two, is the placement of the averaging window over the time series.** 
+
+1. Centered Moving Average
+
+*Averaging operation can suppress seasonality and noise, making the trend more visible.
+
+*If window width is 5, the moving average at t = 3 means averaging time points 1,2,3,4,5. At time point t = 4, the moving average is the average of 2,3,4,5,6. 
+
+*Choosing the window length should be the length of the seasonal cycle. W = 12 for Amtrak data.
+
+*Computed by averaging across data in the past and future of a given time point, therefore not useful for forecasting. 
+
+**Centered moving average uses ma() in forecast package.**
+
+```{r}
+# moving average by one year
+ma.centered <- ma(ridership.ts, order = 12) 
+```
+
+
+2. Trailing Moving Average
+
+*Useful for forecasting
+
+*Window of width W is placed over the most recent W values of the time series. The k-step ahead forecast is then the average of these W values. 
+
+*The lag makes this method not work for seasonal and trend data. According to textbook, "Seasons with high ridership are under-forecasted, and seasons with low ridership are over-forecasted. A similar issue arises when forecasting a series with a trend: the moving average "lags behind", thereby under-forecasting in the presence of an increasing trend and over-forecasting in the presence of a decreasing trend." But de-trending and de-seasonalizing can be done with regression models, advanced exponential smoothing methods, and differencing. Aftr detrended, etc, forecast, then add back. 
+
+**To do trailing moving aveage, use rollmean() in zoo package**
+
+```{r}
+#trailing moving average of entire time series
+ma.trailing <- rollmean(ridership.ts, k = 12, align = "right")
+
+```
+
+```{r}
+#plot the whole time series
+plot(ridership.ts, ylim = c(1300, 2200), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2004.25), main ="")
+#label x axis
+axis(1, at = seq(1991, 2004.25, 1), labels = format(seq(1991, 2004.25, 1))) 
+#add moving average line
+lines(ma.centered, lwd = 2) 
+#add trailing moving average line
+lines(ma.trailing, lwd = 2, lty = 2) 
+#legend for all three lines
+legend(1994,2200, c("Ridership","Centered Moving Average", "Trailing Moving Average"), lty=c(1,1,2), lwd=c(1,2,2), bty = "n")
+
+```
+
+**Trailing Moving Average Forecaster**
+
+```{r}
+#3 year validation
+nValid <- 36
+#training period
+nTrain <- length(ridership.ts) - nValid
+#training window
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+#validation window
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 12, align = "right")
+#last value because want a lag 
+last.ma <- tail(ma.trailing, 1)
+
+ma.trailing.pred <-ts(rep(last.ma, nValid), start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid), freq = 12)
+
+
+
+plot(train.ts, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991, 2006.25), main = "")
+
+axis(1, at = seq(1991, 2006.25, 1), labels = format(seq(1991, 2006.25, 1)))
+lines(ma.trailing, lwd = 2, col = "blue")
+
+
+lines(ma.trailing.pred, lwd = 2, col = "blue", lty = 2)
+
+lines(valid.ts)
+```
+
+3. Differencing
+
+```{r}
+diff(diff(ridership.ts, lag = 12), lag = 1)
+
+```
+
+*Like the moving average, simple exponential smoothing should only be used for forecasting series that have no trend or seasonality.
+
+
+
