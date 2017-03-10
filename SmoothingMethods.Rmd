@@ -35,6 +35,8 @@ tail(ridership)
 
 *Computed by averaging across data in the past and future of a given time point, therefore not useful for forecasting. 
 
+*If trend and seasonality, don't use this method, unless just want to see the global trend. 
+
 **Centered moving average uses ma() in forecast package.**
 
 ```{r}
@@ -131,9 +133,64 @@ diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
 
 *Like moving average, but weighted average of all past values so weights decrease exponentially into the past to give more weight to recent data, but not ignore the past altogether. 
 
+*Contains level and error
+
+*Algotithm is learning new level from the latest data. 
+
+*When $\alpha = 1$, no weight is given to early values and the algorithm is not learning anything.Under smoothing.  
+
+*When $\alpha = 0$ the weight is given exclusively to past values and not to the most recent one. Over smoothing. 
+
 *Like the moving average, simple exponential smoothing should only be used for forecasting series that have no trend or seasonality.
 
 *Again, can use differencing to remove seasonality and/or trend and then apply exponential smoothing to the residuals. 
+
+*Below, code to create a simple exponential smoothing forecast where $alpha = 0.2$ applied to twice differenced data. 
+
+```{r}
+diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1)
+#validation period
+nValid <- 36
+#training period of twice differenced data
+nTrain <- length(diff.twice.ts) - nValid
+#training window of twice differenced data. Start date is modified. 
+train.ts <- window(diff.twice.ts, start = c(1992,  2), end = c(1992, nTrain + 1))
+#validation window
+valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid))
+#simple exponential smoothing model "ANN" on training data
+ses <- ets(train.ts, model = "ANN", alpha = .2)
+#forecast this model for the length of the validation period
+ses.pred <- forecast(ses, h = nValid, level = 0)
+ses.pred
+#plot the forecast
+plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (twice differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991, 2006.25), main = "", flty = 2)
+#label the axis
+axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1)))
+lines(ses.pred$fitted, lwd = 2, col = "blue")
+lines(valid.ts)
+```
+
+**Comparison of 2 simple models**
+
+```{r}
+ses.opt <- ets(train.ts, model = "ANN")
+#forecast this model
+ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred, valid.ts)
+#accuracy of ses, ANN, no predetermined alpha
+accuracy(ses.opt.pred, valid.ts)
+ses.opt
+```
+**This is just an aside on how to use dygraphs within a time series.**
+```{r}
+library(dygraphs)
+dygraph(ridership.ts)
+forecast <- cbind(ridership.ts, ma.trailing, ma.centered)
+dygraph(forecast) %>% dyShading(from="2003-1-1", to="2004-3-1", color="#CCEBD6") %>% dyRangeSelector()
+
+```
+
 
 5. Advanced Exponential Smoothing
 
@@ -143,6 +200,8 @@ diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
 
 * **Multiplicative trend:** the level changes from one period to the next by a factor. 
 
-* **Hole Winter's Exponential Smoothing:** Useful for series that contain trend and seasonality. This method is adaptive and allows the level, trend, and seasonality to change over time.  
+* **Holt's Exponential Smoothing** Contains trend but no seasonality. 
+
+* **Holt Winter's Exponential Smoothing:** Useful for series that contain trend and seasonality. This method is adaptive and allows the level, trend, and seasonality to change over time.  
 
 
