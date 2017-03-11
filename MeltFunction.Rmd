@@ -1,0 +1,77 @@
+---
+title: "Using the Melt Function"
+author: "Christine Iyer"
+date: "March 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(reshape2)
+library(knitr)
+library(dplyr)
+library(tidyr)
+library(digest)
+library(Rcpp)
+library(ggplot2)
+library(ggvis)
+```
+
+```{r}
+Votes <- read.csv("Votes.csv")
+kable(Votes)
+```
+
+```{r}
+new <- melt(Votes, value.name = "frequency")
+```
+
+
+```{r}
+new <- new %>% rename(Loss_Gain = variable, Support_for_Candidate = frequency)
+```
+
+```{r}
+new <- new %>% select(If.You.Stand.To = Loss_Gain, You.Voted.For = Candidate, Percent.Of.The.Time = Support_for_Candidate)
+kable(new)
+```
+
+
+
+```{r, fig.width=8, message=FALSE, warning=FALSE}
+votePlot <- ggplot() + geom_bar(aes(y = new$Percent.Of.The.Time, x = new$If.You.Stand.To, fill = new$You.Voted.For), stat = "identity") +
+    scale_fill_hue(l=40) +
+    scale_fill_brewer(palette="Spectral")
+votePlot
+
+ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + geom_bar(aes(fill = You.Voted.For), stat = "identity",  position = position_dodge()) +
+    scale_fill_hue(l=40) +
+    scale_fill_brewer(palette="Spectral")
+
+
+black.bold.italic.12.text <- element_text(face = "bold.italic", color = "black", size = 8)
+
+ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + geom_line(aes(colour = You.Voted.For, group = You.Voted.For)) + geom_point(aes(colour = You.Voted.For), size = 3) + theme(axis.text = black.bold.italic.12.text)
+```
+
+
+
+```{r}
+dim(new)
+Amount <- c(-7500, -7500, -7500, -5000, -5000, -5000, -2500, -2500, -2500, -1000, -1000, -1000, 1000, 1000, 1000, 2500, 2500, 2500, 5000, 5000, 5000)
+Candidate <- c("Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other")
+Frequency <- c(.58, .39, .03, .6, .35, .05, .49, .45, .06, .46, .46, .08, .41, .5, .09, .43, .49, .08, .46, .47, .07)
+library(reshape2)
+NewData <- data.frame(Candidate, Amount, Frequency)
+NewData
+
+votePlot <- ggplot() + geom_bar(aes(y = NewData$Frequency, x = NewData$Amount, fill = NewData$Candidate, position = "dodge"), stat = "identity")
+ggplot(NewData, aes(Frequency, fill = Candidate)) + geom_bar(position = "dodge")
+
+
+```
+
+
