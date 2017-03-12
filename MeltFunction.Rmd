@@ -41,44 +41,56 @@ kable(new)
 
 ```{r}
 new<- new[seq(dim(new)[1],1),]
-new
+kable(new)
+```
+
+
+
+
+
+```{r}
+black.bold.italic.12.text <- element_text(face = "bold.italic", color = "black", size = 8)
+
+votePlot <- ggplot(new) + geom_bar(aes(y = new$Percent.Of.The.Time, x = new$If.You.Stand.To, fill = new$You.Voted.For), stat = "identity") +
+    scale_fill_hue(l=40) +
+    scale_fill_brewer(palette="Spectral") + coord_flip()+ theme(axis.text = black.bold.italic.12.text) + guides(fill = guide_legend(reverse=TRUE)) + 
+  xlab("Amount You Will Lose") + 
+  ylab("Percentage of Voters")
+votePlot
+
 ```
 
 
 ```{r, fig.width=8, message=FALSE, warning=FALSE}
 
-black.bold.italic.12.text <- element_text(face = "bold.italic", color = "black", size = 8)
 
-votePlot <- ggplot() + geom_bar(aes(y = new$Percent.Of.The.Time, x = new$If.You.Stand.To, fill = new$You.Voted.For), stat = "identity") +
+ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + 
+  geom_bar(aes(fill = You.Voted.For), stat = "identity",  position = position_dodge()) +
     scale_fill_hue(l=40) +
-    scale_fill_brewer(palette="Spectral") + coord_flip()+ theme(axis.text = black.bold.italic.12.text)
-votePlot
+    #scale_fill_brewer(palette="Spectral") +
+  coord_flip() + theme(axis.text = black.bold.italic.12.text) + 
+  #reverses legend order
+  guides(fill = guide_legend(reverse=TRUE)) + xlab("Amount You Will Lose")+ylab("Percentage of Voters")
 
-ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time, #order = -as.numeric(You.Voted.For)
-                )) + geom_bar(aes(fill = You.Voted.For), stat = "identity",  position = position_dodge()) +
-    scale_fill_hue(l=40) +
-    scale_fill_brewer(palette="Spectral")+
-  coord_flip() + theme(axis.text = black.bold.italic.12.text)
-
-
-
-ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + geom_line(aes(colour = You.Voted.For, group = You.Voted.For)) + geom_point(aes(colour = You.Voted.For), size = 3) + theme(axis.text = black.bold.italic.12.text)
+ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + 
+  geom_line(aes(colour = You.Voted.For, group = You.Voted.For)) + 
+  geom_point(aes(colour = You.Voted.For), size = 3) + 
+  theme(axis.text = black.bold.italic.12.text) + scale_fill_hue(l=40) + 
+  guides(fill = guide_legend(reverse=TRUE)) + xlab("Amount You Will Lose") +
+  ylab("Percentage of Voters") + 
+    scale_fill_manual(values=c("#CC6666", "#9999CC", "#66CC99"))
 ```
 
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 dim(new)
-Amount <- c(-7500, -7500, -7500, -5000, -5000, -5000, -2500, -2500, -2500, -1000, -1000, -1000, 1000, 1000, 1000, 2500, 2500, 2500, 5000, 5000, 5000)
+Amount_to_Lose <- c(-7500, -7500, -7500, -5000, -5000, -5000, -2500, -2500, -2500, -1000, -1000, -1000, 1000, 1000, 1000, 2500, 2500, 2500, 5000, 5000, 5000)
 Candidate <- c("Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other", "Trump", "Clinton", "Other")
-Frequency <- c(.58, .39, .03, .6, .35, .05, .49, .45, .06, .46, .46, .08, .41, .5, .09, .43, .49, .08, .46, .47, .07)
+Percent_Who_Voted_in_Candidate <- c(.58, .39, .03, .6, .35, .05, .49, .45, .06, .46, .46, .08, .41, .5, .09, .43, .49, .08, .46, .47, .07)
 library(reshape2)
-NewData <- data.frame(Candidate, Amount, Frequency)
-NewData
-
-votePlot <- ggplot() + geom_bar(aes(y = NewData$Frequency, x = NewData$Amount, fill = NewData$Candidate, position = "dodge"), stat = "identity")
-ggplot(NewData, aes(Frequency, fill = Candidate)) + geom_bar(position = "dodge")
-
+NewData <- data.frame(Candidate, Amount_to_Lose, Percent_Who_Voted_in_Candidate)
+kable(NewData)
 
 ```
 
