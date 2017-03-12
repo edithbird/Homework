@@ -39,20 +39,28 @@ new <- new %>% select(If.You.Stand.To = Loss_Gain, You.Voted.For = Candidate, Pe
 kable(new)
 ```
 
+```{r}
+new<- new[seq(dim(new)[1],1),]
+new
+```
 
 
 ```{r, fig.width=8, message=FALSE, warning=FALSE}
-votePlot <- ggplot() + geom_bar(aes(y = new$Percent.Of.The.Time, x = new$If.You.Stand.To, fill = new$You.Voted.For), stat = "identity") +
-    scale_fill_hue(l=40) +
-    scale_fill_brewer(palette="Spectral")
-votePlot
-
-ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + geom_bar(aes(fill = You.Voted.For), stat = "identity",  position = position_dodge()) +
-    scale_fill_hue(l=40) +
-    scale_fill_brewer(palette="Spectral")
-
 
 black.bold.italic.12.text <- element_text(face = "bold.italic", color = "black", size = 8)
+
+votePlot <- ggplot() + geom_bar(aes(y = new$Percent.Of.The.Time, x = new$If.You.Stand.To, fill = new$You.Voted.For), stat = "identity") +
+    scale_fill_hue(l=40) +
+    scale_fill_brewer(palette="Spectral") + coord_flip()+ theme(axis.text = black.bold.italic.12.text)
+votePlot
+
+ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time, #order = -as.numeric(You.Voted.For)
+                )) + geom_bar(aes(fill = You.Voted.For), stat = "identity",  position = position_dodge()) +
+    scale_fill_hue(l=40) +
+    scale_fill_brewer(palette="Spectral")+
+  coord_flip() + theme(axis.text = black.bold.italic.12.text)
+
+
 
 ggplot(new, aes(x = If.You.Stand.To, y = Percent.Of.The.Time)) + geom_line(aes(colour = You.Voted.For, group = You.Voted.For)) + geom_point(aes(colour = You.Voted.For), size = 3) + theme(axis.text = black.bold.italic.12.text)
 ```
