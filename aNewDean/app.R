@@ -1,10 +1,10 @@
-
-
 library(shiny)
 library(DT)
 library(dplyr)
 library(digest)
 library(ggplot2)
+library(RSQLite)
+library(rsconnect)
 
 # Define UI for application that draws a histogram
 
@@ -31,7 +31,7 @@ labelMandatory <- function(label) {
 }
 appCSS <- ".mandatory_star { color: red; }"
 
-responsesDirectory <- file.path("/Users/Chris Iyer/Documents/responses.csv", row.names = TRUE)
+responsesDirectory <- file.path("/Users/Chris Iyer/Documents/aNewDean/responses.csv", row.names = TRUE)
 
 
 
@@ -170,7 +170,7 @@ server <- function(input, output) ({
   
   
   output$table1 <- renderTable({
-
+    
     data.frame(
       
       Paul =  sum(input$integer1,input$integer3, input$integer5,
@@ -247,7 +247,7 @@ server <- function(input, output) ({
              },
              logical(1))
     mandatoryFilled <- all(mandatoryFilled)
-
+    
     # enable/disable the submit button
     shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
   })
@@ -256,9 +256,9 @@ server <- function(input, output) ({
   
   formData <- reactive({
     data <- sapply(fieldsAll, function(x) input[[x]])
-
+    
     data <- t(data)
-              data
+    data <- as.data.frame(data)
   })
   
   
@@ -275,7 +275,7 @@ server <- function(input, output) ({
     saveData(formData())
   })
   
-    
+  
   
   observeEvent(input$submit, {
     saveData(formData())
@@ -288,8 +288,20 @@ server <- function(input, output) ({
     shinyjs::show("form")
     #shinyjs::hide("thankyou_msg")
   }) 
-  
-  
+  save_data_sqlite <- function(data) {
+    db <- dbConnect(SQLite(), options()$sqlite$file)
+    query <- sprintf("INSERT INTO %s (%s) VALUES ('%s')", TABLE_NAME, 
+                     paste(names(data), collapse = ", "), paste(data, collapse = "', '"))
+    dbGetQuery(db, query)
+    dbDisconnect(db)
+  }
+  load_data_sqlite <- function() {
+    db <- dbConnect(SQLite(), options()$sqlite$file)
+    query <- sprintf("SELECT * FROM %s", TABLE_NAME)
+    data <- dbGetQuery(db, query)
+    dbDisconnect(db)
+    data
+  }
 })
 
 
