@@ -12,24 +12,56 @@ ui <- fluidPage(
               0, 25, 2, ticks = FALSE),
   actionButton("submit", "Submit")
 )
-
+ 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
+  outputDir <- "responses1"
+  
+#Ex 2: Local file system  
   saveData <- function(data1) {
-    data1 <- as.data.frame(t(data1))
-    if (exists("responses1")) {
-      responses1 <<- rbind(responses1, data1)
-    } else {
-      responses1 <<- data1
-    }
+   
+    
+    data <- t(data)
+    # Create a unique file name
+    fileName <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
+    # Write the file to the local system
+    write.csv(
+      x = data,
+      file = file.path(outputDir, fileName), 
+      row.names = FALSE, quote = TRUE
+    )
+    
   }
   
+  
+#Ex 2: Local file system  
   loadData <- function() {
-    if (exists("responses1")) {
-      responses1
-    }
+    # Read all the files into a list
+    files <- list.files(outputDir, full.names = TRUE)
+    data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
+    # Concatenate all data together into one data.frame
+    data <- do.call(rbind, data)
+    data
   }
+# Example 1:This is the code chunk that saves it locally on the app 
+# and when the app is restarted, it starts without the data.    
+    # data1 <- as.data.frame(t(data1))
+    # if (exists("responses1")) {
+    #   responses1 <<- rbind(responses1, data1)
+    # } else {
+    #   responses1 <<- data1
+    # }
+   
+  
+  
+# Example 1"This is the code chunk that saves it locally on the app 
+# and when the app is restarted, it starts without the data  
+  # loadData <- function() {
+  #   if (exists("responses1")) {
+  #     responses1
+  #   }
+  # }
    
   # Whenever a field is filled, aggregate all form data
   formData <- reactive({
