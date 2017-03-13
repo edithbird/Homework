@@ -39,10 +39,10 @@ server <- function(input, output) {
   loadData <- function() {
     # Read all the files into a list
     files <- list.files(outputDir, full.names = TRUE)
-    data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
-    # Concatenate all data together into one data.frame
-    data <- do.call(rbind, data)
-    data
+    data1 <- lapply(files, read.csv, stringsAsFactors = FALSE) 
+    # Concatenate all data1 together into one data1.frame
+    data1 <- do.call(rbind, data1)
+    data1
   }
 # Example 1:This is the code chunk that saves it locally on the app 
 # and when the app is restarted, it starts without the data.    
