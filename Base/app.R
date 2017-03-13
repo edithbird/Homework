@@ -10,7 +10,7 @@ ui <- fluidPage(
   
   
   
-  DT::dataTableOutput("responses", width = 300), tags$hr(),
+ 
   fluidRow(
     column(4, 
       textInput("name1", "Name", ""),
@@ -33,12 +33,15 @@ column(4,
 column(4,
        tableOutput("Sum")
 ),
-actionButton("submit", "Submit")
+actionButton("submit", "Submit"), 
+DT::dataTableOutput("responses", width = 300), tags$hr()
 
 
 
-), 
-plotOutput("barplot4")
+)
+
+# , 
+# plotOutput("barplot4")
 
 )
   
@@ -91,36 +94,36 @@ server <- function(input, output) {
     loadData()
   })
   
-  output$barplot4 <- renderPlot({
-    
-    blue.bold.italic.16.text <- element_text(face = "bold", color = "black", size = 14)
-    
-    axisTitle <- element_text(face = "bold", color = "black", size = 16)
-    
-    
-    Round_Number = c("1", "1", "2", "2") 
-    
-    Player = c("1", "2", "1", "2")
-    
-    Score = c(input$integer1, input$integer2, 
-              input$integer3, input$integer4)
-    
-    DF <- data.frame(Player, Round_Number, Score)
-    
-    ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + 
-      geom_bar(stat = "identity", size = 2, position = "dodge") + 
-      scale_fill_manual(values=c("slateblue3", "yellow")) + 
-      labs(x="Round", y="Score") +
-      #scale_fill_hue(c=45, l=80) + 
-      ylim(-15, 80) + theme(panel.grid.major = element_blank(), 
-                            panel.grid.minor = element_blank(), 
-                            panel.border = element_blank(), 
-                            panel.background = element_blank(), 
-                            axis.text.x = blue.bold.italic.16.text, 
-                            axis.text.y = blue.bold.italic.16.text, 
-                            axis.title.x = axisTitle, 
-                            axis.title.y = axisTitle)
-  })
+  # output$barplot4 <- renderPlot({
+  #   
+  #   blue.bold.italic.16.text <- element_text(face = "bold", color = "black", size = 14)
+  #   
+  #   axisTitle <- element_text(face = "bold", color = "black", size = 16)
+  #   
+  #   
+  #   Round_Number = c("1", "1", "2", "2") 
+  #   
+  #   Player = c("1", "2", "1", "2")
+  #   
+  #   Score = c(input$integer1, input$integer2, 
+  #             input$integer3, input$integer4)
+  #   
+  #   DF <- data.frame(Player, Round_Number, Score)
+  #   
+  #   ggplot(DF, aes(x = Round_Number, y = Score, fill = Player)) + 
+  #     geom_bar(stat = "identity", size = 2, position = "dodge") + 
+  #     scale_fill_manual(values=c("slateblue3", "yellow")) + 
+  #     labs(x="Round", y="Score") +
+  #     #scale_fill_hue(c=45, l=80) + 
+  #     ylim(-15, 80) + theme(panel.grid.major = element_blank(), 
+  #                           panel.grid.minor = element_blank(), 
+  #                           panel.border = element_blank(), 
+  #                           panel.background = element_blank(), 
+  #                           axis.text.x = blue.bold.italic.16.text, 
+  #                           axis.text.y = blue.bold.italic.16.text, 
+  #                           axis.title.x = axisTitle, 
+  #                           axis.title.y = axisTitle)
+  #})
   
   
 }
