@@ -49,14 +49,9 @@ DT::dataTableOutput("responses", width = 300), tags$hr()
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-  
+#This is the table with the player names and the summed scores  
   output$Sum <- renderTable({
-    
-    
-    
     data.frame(
-      
-      
       Player1 = print(input$name1), 
       Player1Score = sum(input$integer1, input$integer3), 
       Player2 = print(input$name2), 
