@@ -1,0 +1,171 @@
+---
+title: "Incidence"
+author: "Christine Iyer"
+date: "March 14, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+library(knitr)
+library(pander)
+library(tidyverse)
+library(dplyr)
+library(readxl)
+library(reshape2)
+library(forecast)
+library(ggplot2)
+
+```
+
+
+Reading date in that has been stored as excel. 
+
+```{r}
+IncidenceAndRace <- readxl::read_excel("ESRDIncidence.xlsx", sheet = 1)
+Inc <- read.csv("RaceIncidence.csv", header = FALSE, stringsAsFactors = FALSE)
+head(Inc)
+IncidenceAndRace <- IncidenceAndRace[-1,]
+head(Inc)
+
+class(Inc)
+Inc <- t(Inc)
+
+Inc <- as.data.frame(Inc)
+class(Inc)
+
+names(Inc)
+names(Inc) <- NULL
+
+head(Inc)
+#remove first line of data
+#set column names
+
+
+```
+
+The data from Excel
+
+```{r}
+pander(head(IncidenceAndRace))
+```
+
+Structure of the data from Excel Sheet
+
+```{r}
+class(IncidenceAndRace)
+```
+
+#Year neeeds to be its own variable
+
+###t()
+
+```{r}
+IncidenceAndRaceT <- t(IncidenceAndRace)
+as.data.frame(IncidenceAndRaceT)
+IncidenceAndRaceT <- IncidenceAndRaceT 
+pander(head(IncidenceAndRaceT))
+#Can't convert to a time series because "atomic vector can't use the $ sign."
+#IncidenceAndRaceT.ts <- ts(IncidenceAndRaceT$White, start = c(1996, 1), frequency = 1)
+```
+
+
+
+Melted
+
+```{r}
+IncidenceAndRaceM <- melt(IncidenceAndRace, Race = c("1996":"2014"))
+
+IncidenceAndRaceM <- IncidenceAndRaceM %>% rename(Race = Year, Year = variable, annualCases = value) %>% select(Year, Race, annualCases)
+pander(tail(IncidenceAndRaceM, 10))
+class(IncidenceAndRaceM)
+dim(IncidenceAndRace)
+```
+
+
+#Gather
+
+```{r}
+cleaner <- IncidenceAndRace %>% gather(key, incidence, -Year)
+
+cleaner %>% rename(Race = Year, Year = key, Incidence = incidence)
+
+cleaner$Year <- as.POSIXct(cleaner$Year, format = "%Y")
+head(cleaner)
+
+
+class(cleaner$Year)
+
+```
+
+Incidence and race as a csv
+
+```{r}
+Race <- read.csv("RaceIncidence.csv", header = TRUE, stringsAsFactors = FALSE)
+pander(head(Race))
+#as.data.frame.data.frame(Race)
+#Race <- t(Race)
+#kable(head(Race))
+class(Race)
+RaceT <- t(Race)
+pander(head(RaceT))
+kable(head(RaceT))
+```
+
+
+
+
+
+```{r}
+
+
+# IncidenceAndRace <- t(IncidenceAndRace)
+# pander(head(IncidenceAndRace))
+# 
+# 
+# IncidenceAndRace <- IncidenceAndRace %>% gather(IncidenceAndRace, Year, 2:19)
+
+# IncidenceAndRace <- melt(IncidenceAndRace, id.vars = "Race", measure.vars = c("1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014"))
+# kable(head(IncidenceAndRace))
+# library(dplyr)
+# 
+# IncidenceAndRace <- IncidenceAndRace %>%  rename(Year = variable, Incidence = value)
+# kable(head(IncidenceAndRace))
+# IncidenceAndRace <- IncidenceAndRace %>%  select(Year, Race, Incidence)
+# kable(head(IncidenceAndRace))
+# IncidenceAndRace <- spread(IncidenceAndRace, Race, Race)
+#head(kable(IncidenceAndRace))
+```
+
+```{r}
+set.seed(10)
+messy <- data.frame(id = 1:4, trt = sample(rep(c("control", "treatment"), each = 2)), work.T1 = runif(4), 
+home.T1 = runif(4), 
+work.T2 = runif(4), 
+home.T2 = runif(4))
+head(messy)
+```
+
+Use gather
+
+```{r}
+tidier <- messy %>% gather(key, time, -id, -trt)
+head(tidier)
+```
+
+#Incidence2 <- read_excel("ESRDIncidence.xlsx", sheet = 2)
+
+#Incidence2 <- t(Incidence2)
+#Incidence2 <- Incidence2 %>% rename(Year = Age)
+
+#
+#class(Incidence2)
+
+
