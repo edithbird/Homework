@@ -92,6 +92,7 @@ lines(valid.ts)
  
 ```
 
+
 **Accuracy**
 
 ```{r}
@@ -179,8 +180,37 @@ accuracy(naive.pred, valid.ts)
 accuracy(snaive.pred, valid.ts)
 ```
 
+###Simple naive forecasts for seasonal data. 
+
+```{r}
+#naive forecast of training set for the validation length
+NaiveRidership <- snaive(train.ts , h = nValid)
+#the training set forecast
+NaiveRidership$mean
+#accuracy of forecast training set forecast for the duration of the validation length
+accuracy(NaiveRidership, valid.ts)
+#training period error terms
+hyhist <- hist(NaiveRidership$residuals, ylab = "Frequency", xlab = "FOrecast Error", main = "", bty = "l")
+#multiplier for a density curve
+multiplier <- hyhist$counts / hyhist$density
+mydensity <- density(NaiveRidership$residuals, na.rm = TRUE)
+mydensity$y <- mydensity$y*multiplier[1]
+#add the density curve
+lines(mydensity)
+
+```
+
+**Forecast Error**
+
+```{r}
+#plot actual values from the validation
+plot(valid.ts, xaxt = "n", xlab = "2002-4", yaxt = "n", ylab = "Ridership")
+axis(1, at = seq(2002,2002.75,0.25), labels=c("Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"))
+axis(2, las=2)
+legend(1989,4925, c("Actual","Forecast"), col=1:2, lty=1:2)
 
 
+```
 
 
 
