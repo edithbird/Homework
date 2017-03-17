@@ -1,0 +1,553 @@
+---
+title: "Book Summary"
+author: "Christine Iyer"
+date: "March 16, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(forecast)
+library(zoo)
+library(knitr)
+```
+
+Week 1 Chapters 1 ("Approaching Forecasting") and 2 ("Data") cover goal definition; data collection, characterization, visualization, and pre-processing. 
+
+```{r}
+ridership <- read.csv("Amtrak.csv")
+##convert datato a time series
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+
+```
+
+**Plots to enhance particular componants** 
+Plot series with a trend line
+
+```{r}
+#trend line
+ridership.lm <- tslm(ridership.ts ~ trend + I(trend^2)) 
+par(mfrow = c(2, 1)) 
+#plot series
+plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l") 
+#plot fitted trend line
+lines(ridership.lm$fitted, lwd = 2) 
+#zoom into 4 years
+#first create window
+ridership.ts.zoom <- window(ridership.ts, start = c(1997, 1), end = c(2000, 12))
+#plot zooned in data
+plot(ridership.ts.zoom, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l") 
+```
+
+**Look for seasonality**
+
+```{r}
+ggseasonplot(ridership.ts, ylab = "Amtrak Ridership", main = "Seasonal Plot for Amtrak Ridership", lwd = 2)
+```
+
+**Ridership boken out by month**
+
+```{r}
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1992,2004)
+yrange <- range(ridership.ts)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Amtrak Ridership", bty="l", las=1)
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+axis(1, at=seq(1992,2004,1), labels=format(seq(1992,2004,1)))
+for (i in 1:12) { 
+  currentMonth <- subset(ridership.ts, cycle(ridership.ts)==i)
+  lines(seq(1992, 1992 +length(currentMonth)-1,1), currentMonth, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Ridership Broken Out by Month")
+legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
+
+```
+
+Week 2 Chapter 3 ("Performance Evaluation") covers data partitioning, naive forecasts, measuring predictive accuracy and uncertainty. 
+
+```{r}
+#training and validation periods
+nValid <- 36 
+nTrain <- length(ridership.ts) - nValid 
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain)) 
+#windows for training and validationperiods
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trend during training period
+ridership.lm <- tslm(train.ts ~ trend + I(trend^2)) 
+#training forecast
+ridership.lm.pred <- forecast(ridership.lm, h = nValid, level = 0) 
+#training forecast plot
+plot(ridership.lm.pred, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
+axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1))) 
+#fitted trend line
+lines(ridership.lm$fitted, lwd = 2) 
+#validation period line
+lines(valid.ts)
+ 
+```
+
+**Accuracy**
+
+```{r}
+#training forecast accuracy
+accuracy(ridership.lm.pred$mean, valid.ts)
+```
+
+The model's residuals are the forecast errors in the training period. Subtracting the model's mean (or forecasts) from valid.ts (or actuals) in the validation period gives the forecast errors in the validation period.
+
+**ridership.lm.pred** forecast of training window
+
+```{r}
+names(ridership.lm.pred) 
+ridership.lm.pred$residuals 
+valid.ts - ridership.lm.pred$mean
+```
+
+Histogram of the forecast errors in the training period from quadratic trend model
+```{r}
+hist(ridership.lm.pred$residuals, ylab = "Frequency", xlab = "Forecast Error", bty = "l", main ="")
+```
+
+
+```{r}
+#ANN model of Amtrak dataset
+ridership.ets.AAN <- ets(ridership.ts, model = "AAN") #Fit Model 1 to the time series.
+#MMN model of Amtrak dataset
+ridership.ets.MMN <- ets(ridership.ts, model = "MMN", damped = FALSE) #Fit Model 2.
+#MMN damped model of Amtrak dataset
+ridership.ets.MMdN <- ets(ridership.ts, model = "MMN", damped = TRUE) #Fit Model 3.
+
+#forecast of AAN model
+ridership.ets.AAN.pred <- forecast(ridership.ets.AAN, h = 115, level = c(0.2, 0.4, 0.6, 0.8))
+#forecast MMN model
+ridership.ets.MMN.pred <- forecast(ridership.ets.MMN, h = 115, level = c(0.2, 0.4, 0.6, 0.8)) 
+#forecast of MMN damped model
+ridership.ets.MMdN.pred <- forecast(ridership.ets.MMdN, h = 115, level = c(0.2, 0.4, 0.6, 0.8))
+
+par(mfrow = c(1, 3)) #This command sets the plot window to show 1 row of 3 plots.
+plot(ridership.ets.AAN.pred, xlab = "Month", ylab = "ridership", ylim = c(1300, 2600))
+plot(ridership.ets.MMN.pred, xlab = "Month", ylab="ridership", ylim = c(1300, 2600))
+plot(ridership.ets.MMdN.pred, xlab = "Month", ylab="ridership", ylim = c(1300, 2600))
+```
+
+**Code for computing the predictive measures for rollforward one-month-ahead forecasts**
+
+```{r}
+fixed.nValid <- 36 
+fixed.nTrain <- length(ridership.ts) - fixed.nValid
+stepsAhead <- 1 
+error <- rep(0, fixed.nValid - stepsAhead + 1) 
+percent.error <- rep(0, fixed.nValid - stepsAhead + 1) 
+
+for(j in fixed.nTrain:(fixed.nTrain + fixed.nValid - stepsAhead)) { 
+  train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, j)) 
+  valid.ts <- window(ridership.ts, start = c(1991, j + stepsAhead), end = c(1991, j + stepsAhead)) 
+  naive.pred <- naive(train.ts, h = stepsAhead) 
+  error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead] 
+  percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts 
+} 
+
+# Use a for loop and the window function to step through the differently sized training and validation sets. Use each training set to make a one-month-ahead naive forecast in the validation set by setting stepsAhead to one. Define two vectors of zeros to store the forecast errors and percentage errors. The last three lines calculate the predictive measures.
+ 
+#roll forward one month error
+mean(abs(error)) 
+sqrt(mean(error^2)) 
+mean(abs(percent.error))
+
+
+```
+
+Performance of naive forecasts using fixed partitioning vs. roll-forward partitioning, for one-monthahead to 36-months-ahead forecasts
+
+**Code for computing naive and seasonal naive forecasts and their predictive measures**
+
+
+```{r}
+fixed.nValid <- 36 
+fixed.nTrain <- length(ridership.ts) - fixed.nValid 
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, fixed.nTrain)) 
+valid.ts <- window(ridership.ts, start = c(1991, fixed.nTrain + 1), end = c(1991, fixed.nTrain + fixed.nValid)) 
+naive.pred <- naive(train.ts, h = fixed.nValid) 
+snaive.pred <- snaive(train.ts, h = fixed.nValid) 
+accuracy(naive.pred, valid.ts) 
+accuracy(snaive.pred, valid.ts)
+```
+
+
+
+
+
+
+Weeks 3-4 Chapter 4 ("Forecasting Methods: Overview") describes and compares different approaches underlying forecasting methods. 
+
+Chapter 5 ("Smoothing Methods") covers moving average, exponential smoothing, and differencing. 
+
+##2 Different Uses of Moving Averages
+###Visualization: it suppresses noise and seasonality in order to show trend. Window used is centered moving average. 
+
+###Forecasting: Use trailing moving average window. 
+
+
+
+**The difference between the two, is the placement of the averaging window over the time series.** 
+
+1. Centered Moving Average
+
+*Averaging operation can suppress seasonality and noise, making the trend more visible.
+
+*If window width is 5, the moving average at t = 3 means averaging time points 1,2,3,4,5. At time point t = 4, the moving average is the average of 2,3,4,5,6. 
+
+*Choosing the window length should be the length of the seasonal cycle. W = 12 for Amtrak data.
+
+*Computed by averaging across data in the past and future of a given time point, therefore not useful for forecasting. 
+
+*If trend and seasonality, don't use this method, unless just want to see the global trend. 
+
+**Centered moving average uses ma() in forecast package.**
+
+```{r}
+# moving average by one year
+ma.centered <- ma(ridership.ts, order = 12) 
+```
+
+
+2. Trailing Moving Average
+
+*Useful for forecasting
+
+*Window of width W is placed over the most recent W values of the time series. The k-step ahead forecast is then the average of these W values. 
+
+*The lag makes this method not work for seasonal and trend data. According to textbook, "Seasons with high ridership are under-forecasted, and seasons with low ridership are over-forecasted. A similar issue arises when forecasting a series with a trend: the moving average "lags behind", thereby under-forecasting in the presence of an increasing trend and over-forecasting in the presence of a decreasing trend." But de-trending and de-seasonalizing can be done with regression models, advanced exponential smoothing methods, and differencing. After detrended, etc, forecast, then add back. 
+
+**To do trailing moving aveage, use rollmean() in zoo package**
+
+```{r}
+#trailing moving average of entire time series
+ma.trailing <- rollmean(ridership.ts, k = 12, align = "right")
+
+```
+
+**Plotting the time series and moving averages**
+[graphical aids](https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/legend.html)
+```{r}
+#plot the whole time series
+plot(ridership.ts, ylim = c(1300, 2200), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2004.25), main ="")
+#label x axis
+axis(1, at = seq(1991, 2004.25, 1), labels = format(seq(1991, 2004.25, 1))) 
+#add moving average line, color 3 = green, lwd = straight line
+lines(ma.centered, lwd = 2, col = 3) 
+#add trailing moving average line, color 4 = blue, lty = 2, dashed line
+#lwd = line thickness
+lines(ma.trailing, lwd = 2, lty = 2, col = 4) 
+#legend for all three lines
+#bty = "o", puts a box around the legend, and "n", no box around it.
+legend(1994,2200, c("Ridership","Centered Moving Average", "Trailing Moving Average"), lty=c(1,1,2), lwd=c(1,2,2), col = c(1, 3:4), bty = "o")
+
+```
+
+**Trailing Moving Average Forecaster**
+
+```{r}
+#3 year validation period window
+nValid <- 36
+#training period
+nTrain <- length(ridership.ts) - nValid
+#training window
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+#validation window
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 12, align = "right")
+#last value because want a lag 
+last.ma <- tail(ma.trailing, 1)
+ma.trailing.pred <-ts(rep(last.ma, nValid), start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid), freq = 12)
+#ma.trailing.pred
+plot(train.ts, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991, 2006.25), main = "")
+axis(1, at = seq(1991, 2006.25, 1), labels = format(seq(1991, 2006.25, 1)))
+#trailing forecast line for the training period
+lines(ma.trailing, lwd = 2, col = 4)
+#forecast of validation period
+lines(ma.trailing.pred, lwd = 2, col = 4, lty = 2)
+lines(valid.ts)
+#
+#legend(1994, 2500, c("Trailing Moving Average", "Trailing MA Forecast", "Validation"), lty = c(1,1,2), lwd = c(1,2,0), col = c(1,4,4), bty = "o")
+```
+
+3. Differencing
+
+*$$lag_1$$ is useful to remove the trend. 
+
+*page 85
+
+*There's a lag, $$lag_1$$ is a 1 time lag, the difference between two consecutive values in a series. Doesn't have to be a  $$lag_1$$, can be a $$lag_k$$. A $$lag_7$$ means subtracting from each value
+the value on the same day in the previous week. $$lag_1$$ results in a series that measures the changes from one period to the next. 
+
+*For quadratic and exponential trends, often have to apply another round of $$lag_1$$ diffrencing to remove the trend. 
+
+*To remove monthly, seasonality trend, use a $$lag-12$$
+
+*To remove seasonality then trend, $$lag-12$$ then $$lag-1$$
+
+
+**Seasonality and trend differencing in the Amtrak data.**
+
+```{r}
+diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
+```
+
+
+4. Simple Exponential Smoothing
+
+*Like moving average, only for **stationary** data series. 
+
+*Like moving average, but weighted average of all past values so weights decrease exponentially into the past to give more weight to recent data, but not ignore the past altogether. 
+
+*Contains level and error
+
+*Algotithm is learning new level from the latest data. 
+
+*When $\alpha = 1$, no weight is given to early values and the algorithm is not learning anything. Called under smoothing.  
+
+*When $\alpha = 0$ the weight is given exclusively to past values and not to the most recent one. Called over smoothing. 
+
+*In code, if want the function to find the best alpha, **don't suggest one for it**.  
+
+*Like the moving average, simple exponential smoothing should only be used for forecasting series that have **no trend or seasonality**.
+
+*Again, can use differencing to remove seasonality and/or trend and then apply exponential smoothing to the residuals. 
+
+*Below, code to create a simple exponential smoothing forecast where $alpha = 0.2$ applied to twice differenced data. 
+
+```{r}
+#perform twice differencing to remove trend and seasonality
+diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1) 
+#create validation period length
+nValid <- 36
+#create training period length
+nTrain <- length(diff.twice.ts) - nValid 
+#create training period window
+train.ts <- window(diff.twice.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid)) 
+#simple exponential smoothing with no trend and no seasonality model
+ses <- ets(train.ts, model = "ANN", alpha = 0.2)
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred <- forecast(ses, h = nValid, level = 0) 
+#the twice differenced forecast. 
+ses.pred 
+#plotting the frecast
+plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (Twice-Differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
+axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1)))
+
+lines(ses.pred$fitted, lwd = 2, col = "blue")
+lines(valid.ts)
+```
+
+
+
+**Comparison of 2 simple models**
+
+```{r}
+ses.opt <- ets(train.ts, model = "ANN")
+#forecast this model
+ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred, valid.ts)
+#accuracy of ses, ANN, no predetermined alpha
+accuracy(ses.opt.pred, valid.ts)
+ses.opt
+#parameters function for the alpha and the initial state
+ses$par
+```
+
+##2 Different Uses of Moving Averages
+###Visualization: it suppresses noise and seasonality in order to show trend. Window used is centered moving average. 
+
+###Forecasting: Use trailing moving average window. 
+
+
+
+**The difference between the two, is the placement of the averaging window over the time series.** 
+
+1. Centered Moving Average
+
+*Averaging operation can suppress seasonality and noise, making the trend more visible.
+
+*If window width is 5, the moving average at t = 3 means averaging time points 1,2,3,4,5. At time point t = 4, the moving average is the average of 2,3,4,5,6. 
+
+*Choosing the window length should be the length of the seasonal cycle. W = 12 for Amtrak data.
+
+*Computed by averaging across data in the past and future of a given time point, therefore not useful for forecasting. 
+
+*If trend and seasonality, don't use this method, unless just want to see the global trend. 
+
+**Centered moving average uses ma() in forecast package.**
+
+```{r}
+# moving average by one year
+ma.centered <- ma(ridership.ts, order = 12) 
+```
+
+
+2. Trailing Moving Average
+
+*Useful for forecasting
+
+*Window of width W is placed over the most recent W values of the time series. The k-step ahead forecast is then the average of these W values. 
+
+*The lag makes this method not work for seasonal and trend data. According to textbook, "Seasons with high ridership are under-forecasted, and seasons with low ridership are over-forecasted. A similar issue arises when forecasting a series with a trend: the moving average "lags behind", thereby under-forecasting in the presence of an increasing trend and over-forecasting in the presence of a decreasing trend." But de-trending and de-seasonalizing can be done with regression models, advanced exponential smoothing methods, and differencing. After detrended, etc, forecast, then add back. 
+
+**To do trailing moving aveage, use rollmean() in zoo package**
+
+```{r}
+#trailing moving average of entire time series
+ma.trailing <- rollmean(ridership.ts, k = 12, align = "right")
+
+```
+
+**Plotting the time series and moving averages**
+[graphical aids](https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/legend.html)
+```{r}
+#plot the whole time series
+plot(ridership.ts, ylim = c(1300, 2200), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2004.25), main ="")
+#label x axis
+axis(1, at = seq(1991, 2004.25, 1), labels = format(seq(1991, 2004.25, 1))) 
+#add moving average line, color 3 = green, lwd = straight line
+lines(ma.centered, lwd = 2, col = 3) 
+#add trailing moving average line, color 4 = blue, lty = 2, dashed line
+#lwd = line thickness
+lines(ma.trailing, lwd = 2, lty = 2, col = 4) 
+#legend for all three lines
+#bty = "o", puts a box around the legend, and "n", no box around it.
+legend(1994,2200, c("Ridership","Centered Moving Average", "Trailing Moving Average"), lty=c(1,1,2), lwd=c(1,2,2), col = c(1, 3:4), bty = "o")
+
+```
+
+**Trailing Moving Average Forecaster**
+
+```{r}
+#3 year validation period window
+nValid <- 36
+#training period
+nTrain <- length(ridership.ts) - nValid
+#training window
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+#validation window
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 12, align = "right")
+#last value because want a lag 
+last.ma <- tail(ma.trailing, 1)
+ma.trailing.pred <-ts(rep(last.ma, nValid), start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid), freq = 12)
+#ma.trailing.pred
+plot(train.ts, ylim = c(1300, 2600), ylab = "Ridership", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991, 2006.25), main = "")
+axis(1, at = seq(1991, 2006.25, 1), labels = format(seq(1991, 2006.25, 1)))
+#trailing forecast line for the training period
+lines(ma.trailing, lwd = 2, col = 4)
+#forecast of validation period
+lines(ma.trailing.pred, lwd = 2, col = 4, lty = 2)
+lines(valid.ts)
+#
+#legend(1994, 2500, c("Trailing Moving Average", "Trailing MA Forecast", "Validation"), lty = c(1,1,2), lwd = c(1,2,0), col = c(1,4,4), bty = "o")
+```
+
+3. Differencing
+
+*$$lag_1$$ is useful to remove the trend. 
+
+*page 85
+
+*There's a lag, $$lag_1$$ is a 1 time lag, the difference between two consecutive values in a series. Doesn't have to be a  $$lag_1$$, can be a $$lag_k$$. A $$lag_7$$ means subtracting from each value
+the value on the same day in the previous week. $$lag_1$$ results in a series that measures the changes from one period to the next. 
+
+*For quadratic and exponential trends, often have to apply another round of $$lag_1$$ diffrencing to remove the trend. 
+
+*To remove monthly, seasonality trend, use a $$lag-12$$
+
+*To remove seasonality then trend, $$lag-12$$ then $$lag-1$$
+
+
+**Seasonality and trend differencing in the Amtrak data.**
+
+```{r}
+diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
+```
+
+
+4. Simple Exponential Smoothing
+
+*Like moving average, only for **stationary** data series. 
+
+*Like moving average, but weighted average of all past values so weights decrease exponentially into the past to give more weight to recent data, but not ignore the past altogether. 
+
+*Contains level and error
+
+*Algotithm is learning new level from the latest data. 
+
+*When $\alpha = 1$, no weight is given to early values and the algorithm is not learning anything. Called under smoothing.  
+
+*When $\alpha = 0$ the weight is given exclusively to past values and not to the most recent one. Called over smoothing. 
+
+*In code, if want the function to find the best alpha, **don't suggest one for it**.  
+
+*Like the moving average, simple exponential smoothing should only be used for forecasting series that have **no trend or seasonality**.
+
+*Again, can use differencing to remove seasonality and/or trend and then apply exponential smoothing to the residuals. 
+
+*Below, code to create a simple exponential smoothing forecast where $alpha = 0.2$ applied to twice differenced data. 
+
+```{r}
+#perform twice differencing to remove trend and seasonality
+diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1) 
+#create validation period length
+nValid <- 36
+#create training period length
+nTrain <- length(diff.twice.ts) - nValid 
+#create training period window
+train.ts <- window(diff.twice.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid)) 
+#simple exponential smoothing with no trend and no seasonality model
+ses <- ets(train.ts, model = "ANN", alpha = 0.2)
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred <- forecast(ses, h = nValid, level = 0) 
+#the twice differenced forecast. 
+ses.pred 
+#plotting the frecast
+plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (Twice-Differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
+axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1)))
+
+lines(ses.pred$fitted, lwd = 2, col = "blue")
+lines(valid.ts)
+```
+
+
+
+**Comparison of 2 simple models**
+
+```{r}
+ses.opt <- ets(train.ts, model = "ANN")
+#forecast this model
+ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred, valid.ts)
+#accuracy of ses, ANN, no predetermined alpha
+accuracy(ses.opt.pred, valid.ts)
+ses.opt
+#parameters function for the alpha and the initial state
+ses$par
+```
+
+Weeks 5-6 Chapters 6 ("Regression Models: Trend and Seasonality") and 7 ("Regression Models: Autocorrelation and External Information") cover linear regression models, autoregressive (AR) and ARIMA models, and modeling external information as predictors in a regression model.
+
+
+
+
+
+
