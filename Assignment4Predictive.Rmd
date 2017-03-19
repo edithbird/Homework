@@ -1,0 +1,109 @@
+---
+title: 'Predictive: Unit 4 Quiz and Homework'
+author: "Christine Iyer"
+date: "March 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Quiz:
+
+**1.	Explain what type of smoothing model can be used if a time series contains a trend.**
+
+Moving Average can be used for data that contains trend, if the data series is detrended. One way it can be trended is by using differencing with a lag = 1. If the data reveals an exponential or quadratic trend, a second round of differencing with a lag = 1 may be necessary. 
+
+Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However if the data series has been detrended with differencing, simple exponential smoothing may be a good model. 
+
+Advanced Expoential Smoothing models are built to accomodate data series with trend. In particular, double exponential smoothing, aka, Holt's linear trend model, the assumption is that the trend can change over time, it's not just assuming the trend is global. Thr trend is estimated from the data and is consistently updated with more data as it becomes available. Holt's model can accomodate data with additive and multiplicative trends. 
+
+A second exponential smoothing method called Holt Winter's is appropriate for data series with trend and seasonality. Again, it can accomodate both additive and multiplicative trends. 
+
+2.	Explain how the value of alpha affects the simple exponential smoothing method.
+
+$\alpha$, a user chosen constant between 0-1, determines the model's rate of learning, i.e., how much influence the most recent values in the time series have on the forecast. A value close to 1, fast learning,  means that the the most recent data has the greatest impact on the forecast. Conversely, a value close to 0 indicated the model is a slow learner and the recent data have little impact while past data have the greatest influence. 
+
+Because $\alpha$ is far from zero, the level adapts locally,
+
+
+
+**3.	Explain what it means if the two smoothing constants in double exponential smoothing, alpha and beta, are closer to 1.**
+
+The $\alpha$ constant is used to smooth the time series that exhibits stationarity. As explained above, in exponential smoothing, an $\alpha$ close to one means the model learns quickly and the most recent data in the series has the greatest impact on the forecast. 
+
+$\beta$ is a second smoothing constant that is used in addition to $\alpha$ and it is used in double exponential smoothing, or, Holt Winter's models for **trend** smoothing. A higher $\beta$ value, one that is closer to 1, is chsen when less smoothing is desired; therefore, more weight is plaved on the recent data.  
+
+4.	Describe how you would use differencing to remove a trend from a time series dataset.
+
+**5.	When using moving average for forecasting, how should you choose the appropriate window size, w?**
+
+When using the moving average forecasting model, the user gets to choose the width of the trailing moving average window, or **W**. Striking a balance between under and over forecasting may require some trial and error. A first step is to visualize the data series. If the series shows seasonal pattern, a **W** of the length of the seasonal cycle may be a good choice. 
+
+Domain knowledge regarding how fast the series changes and regarding the relevance of past observations will assist the forecaster in making this decision. 
+
+Trial and error is also part of the decision. Seeing how the model performs with different window widthe allows comparison of the errors and the performance charts. It is also important to not overfit the model to the data.  
+
+
+#Homework:
+
+Please answer Chapter 5, questions 2, 5, and 8 from the text (p. 108 - 116).  
+
+
+##2. 
+Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?
+
+
+##5. 
+Forecasting Department Store Sales
+
+a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
+
+b. A forecaster was tasked to generate forecasts for 4 quarters ahead. She therefore partitioned the data so that the last 4 quarters were designated as the validation period. The forecaster approached the forecasting task by using multiplicative Holt-Winter's exponential smoothing. Specifically, you should call the ets function with the parameters restrict=FALSE, model = "ZZZ" and use the smoothing constants of $\alpha=0.2$ $\alpha=0.2$, $=\beta=0.15$ $\beta=0.15$, and $\lambda=0.05$ $\lambda=0.05$.
+
+i. Run this method on the data. Request the forecasts on the validation period. (Note that the forecasted values for the validation set will be different than what the book shows.)
+
+ii. Using the forecasts for the validation set that you came up with in i. above, 
+  *compute the MAPE values for the forecasts of quarters 21-22.
+  
+c. The fit and the residuals were displayed in the book. 
+  *Please reproduce them with R code. Using all the information from (b) and your generated figures, is this model suitable for forecasting quarters 21 and 22?
+  
+d. Another analyst decided to take a much simpler approach, and instead of using exponential smoothing he used differencing. 
+
+  *Use differencing to remove the trend and seasonal pattern. Which order works better: first removing trend and then seasonality or the opposite order? 
+
+  *Show the progression of time plots as you difference the data and each final series to provide evidence in support of your answer.
+  
+e. Forecast quarters 21-22 using the average of the double-differenced series from (d). Remember to use only the training period (until quarter 20), and to adjust back for the trend and seasonal pattern.
+
+f. Compare the forecasts from (e) to the exponential smoothing forecasts found in (b). Which of the two forecasting methods would you choose? Explain.
+
+g. What is an even simpler approach that should be compared as a baseline? 
+  *Complete that comparison.
+
+8. Forecasting Australian Wine Sales: Figure 5.14 shows time plots of monthly sales of six types of Australian wines (red, rose, sweet white, dry white, sparkling, and fortified) for 1980-1994. Data available in AustralianWines.xls. 23 The units are thousands of liters. You are hired to obtain short-term forecasts (2-3 months ahead) for each of the six series, and this task will be repeated every month.
+
+(a) Which smoothing method would you choose if you had to choose the same method for forecasting all series? Why? 
+
+(b) Fortified wine has the largest market share of the six types of wine. You are asked to focus on fortified wine sales alone and produce as accurate a forecast as possible for the next two months.
+
+  *Start by partitioning the data using the period until Dec- 1993 as the training period. 
+  
+  *Apply Holt-Winter's exponential smoothing (with multiplicative seasonality) to sales. 
+  
+(c) Create a plot for the residuals from the Holt-Winter's exponential smoothing. 
+
+**i. Based on this plot, which of the following statements are reasonable?**
+
+  *December"s (month 12) are not captured well by the model. 
+  
+  *There is a strong correlation between sales on the same calendar month. 
+  
+  *The model does not capture the seasonality well. 
+  *We should first deseasonalize the data and then apply Holt-Winter's exponential smoothing.
+  
+**ii. How can you handle the above effect with exponential smoothing?**
+
+
