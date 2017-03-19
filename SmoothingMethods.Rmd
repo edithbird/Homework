@@ -14,18 +14,205 @@ knitr::opts_chunk$set(
 )
 ```
 
+#1. Read in data and convert to time series. 
+
 ```{r}
 library(forecast)
 library(zoo)
 library(knitr)
 #read in data
 ridership <- read.csv("Amtrak.csv")
-##convert datato a time series
+##convert data to a time series
 ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
 tail(ridership)
 ```
 
-###2 Types of Moving Averages
+#2. Visualize for trend and seasonality
+
+###Trend
+```{r}
+#trend line
+ridership.lm <- tslm(ridership.ts ~ trend + I(trend^2)) 
+par(mfrow = c(2, 1)) 
+#simple plot
+plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
+#plot fitted trend line
+lines(ridership.lm$fitted, lwd = 2) 
+#zoom into 4 years
+#first create window
+ridership.ts.zoom <- window(ridership.ts, start = c(1997, 1), end = c(2000, 12))
+#plot zooned in data
+plot(ridership.ts.zoom, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l") 
+```
+
+**Using centered moving average to visualize trend, along with linear trend line**
+
+```{r}
+# moving average by one year
+ma.centered <- ma(ridership.ts, order = 12) 
+```
+
+
+```{r}
+plot(ridership.ts, xlab = "Time", ylab = "Ridership", ylim = c(1300, 2300), bty = "l")
+#plot fitted trend line
+lines(ridership.lm$fitted, lwd = 2, col = 4) 
+lines(ma.centered, lwd = 2, col = 3) 
+legend(1994,2300, c("Ridership","Trend", "Centered Moving Average"), lty=c(1,1,1), lwd=c(2,2,2), col = c(1,4,3), bty = "o")
+
+```
+
+
+###Seasonality
+
+**Look for seasonality**
+
+```{r}
+library(ggplot2)
+ggseasonplot(ridership.ts, ylab = "Amtrak Ridership", main = "Seasonal Plot for Amtrak Ridership", lwd = 2) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank())
+```
+
+**Ridership boken out by month**
+
+```{r}
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1992,2004)
+yrange <- range(ridership.ts)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Amtrak Ridership", bty="l", las=1)
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+axis(1, at=seq(1992,2004,1), labels=format(seq(1992,2004,1)))
+for (i in 1:12) { 
+  currentMonth <- subset(ridership.ts, cycle(ridership.ts)==i)
+  lines(seq(1992, 1992 +length(currentMonth)-1,1), currentMonth, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Ridership Broken Out by Month")
+legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
+
+```
+
+**There appears to be some seasonality**
+
+###Forecast with moving average after double differencing 
+
+**Double differencing**
+
+```{r}
+diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1)
+```
+
+**Trailing moving average of double differenced Amtrak data**
+
+```{r}
+#create validation period length
+nValid <- 36
+#create training period length
+nTrain <- length(diff.twice.ts) - nValid 
+#create training period window
+train.ts <- window(diff.twice.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 12, align = "right")
+forecast.ma.trailing <- forecast(ma.trailing, h = nValid, level = 0)
+accuracy(forecast.ma.trailing, valid.ts)
+```
+
+**Simple Exponential Smoothing using only seasonal differencing**
+
+```{r}
+diff.ts <- diff(ridership.ts, lag = 12)
+#create validation period length
+nValid <- 36
+#create training period length
+nTrain <- length(diff.ts) - nValid 
+#create training period window
+train.ts <- window(diff.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(diff.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid))
+
+#simple exponential smoothing with no trend and no seasonality model, alpha = 0.2
+ses1 <- ets(train.ts, model = "ANN", alpha = 0.2)
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred <- forecast(ses1, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred, valid.ts)
+ses1
+```
+
+
+```{r}
+#simple exponential smoothing with no trend and no seasonality model, ANN, no predetermined alpha
+ses2 <- ets(train.ts, model = "ANN")
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred2 <- forecast(ses2, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = null
+accuracy(ses.pred2, valid.ts)
+ses2
+```
+
+**When no model determined, the function chooses ANN**
+```{r}
+#simple exponential smoothing with no trend and no predetermined model, alpha = 0.2
+ses3 <- ets(train.ts, model = "ZZZ", alpha = 0.2)
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred3 <- forecast(ses3, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred3, valid.ts)
+ses3
+```
+
+**Again, model chooses ANN and alpha of 0.468**
+
+```{r}
+#simple exponential smoothing with no trend and no seasonality model, alpha  is blank
+ses4 <- ets(train.ts, model = "ZZZ")
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred4 <- forecast(ses4, h = nValid, level = 0)
+#accuracy of ses, ANN forecast with alpha = blank
+accuracy(ses.pred4, valid.ts)
+ses4
+
+```
+
+
+###Advanced exponential smoothing using Holt Winters.
+
+**Since this model is apppropriatefor series with trend and seasonality, no differencing is needed.** 
+
+```{r}
+#create validation period length
+nValid <- 36
+#create training period length
+nTrain <- length(ridership.ts) - nValid 
+#create training period window
+train.ts <- window(ridership.ts, start = c(1993, 1), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(ridership.ts, start = c(199, nTrain + 2), end = c(1993, nTrain + 1 + nValid))
+hwRidership <- HoltWinters(train.ts)
+forecasthwRIdership <- forecast(hwRidership, h = nValid, level = 0)
+accuracy(forecasthwRIdership, valid.ts)
+hwRidership
+```
+
+
+
+
+
+
+
+
+
+##2 Different Uses of Moving Averages
+###Visualization: it suppresses noise and seasonality in order to show trend. Window used is centered moving average. 
+
+###Forecasting: Use trailing moving average window. 
+
+
+
 **The difference between the two, is the placement of the averaging window over the time series.** 
 
 1. Centered Moving Average
@@ -156,27 +343,31 @@ diff <- diff(diff(ridership.ts, lag = 12), lag = 1)
 *Below, code to create a simple exponential smoothing forecast where $alpha = 0.2$ applied to twice differenced data. 
 
 ```{r}
-diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1)
-#validation period
+#perform twice differencing to remove trend and seasonality
+diff.twice.ts <- diff(diff(ridership.ts, lag = 12), lag = 1) 
+#create validation period length
 nValid <- 36
-#training period of twice differenced data
-nTrain <- length(diff.twice.ts) - nValid
-#training window of twice differenced data. Start date is modified. 
-train.ts <- window(diff.twice.ts, start = c(1992,  2), end = c(1992, nTrain + 1))
-#validation window
-valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid))
-#simple exponential smoothing model "ANN" on training data
-ses <- ets(train.ts, model = "ANN", alpha = .2)
-#forecast this model for the length of the validation period
-ses.pred <- forecast(ses, h = nValid, level = 0)
-ses.pred
-#plot the forecast
-plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (twice differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991, 2006.25), main = "", flty = 2)
-#label the axis
+#create training period length
+nTrain <- length(diff.twice.ts) - nValid 
+#create training period window
+train.ts <- window(diff.twice.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
+#create validation period window
+valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid)) 
+#simple exponential smoothing with no trend and no seasonality model
+ses <- ets(train.ts, model = "ANN", alpha = 0.2)
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+ses.pred <- forecast(ses, h = nValid, level = 0) 
+#the twice differenced forecast. 
+ses.pred 
+#plotting the frecast
+plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (Twice-Differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
 axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1)))
+
 lines(ses.pred$fitted, lwd = 2, col = "blue")
 lines(valid.ts)
 ```
+
+
 
 **Comparison of 2 simple models**
 
@@ -236,4 +427,6 @@ ma.centered <- ma(air.ts, order = 12)
 #trailing moving average
 ma.trailing <- rollmean(air.ts, k = 12, align = "right")
 ```
+
+
 
