@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(forecast)
 library(zoo)
 library(knitr)
+library(pander)
 ```
 
 Week 1 Chapters 1 ("Approaching Forecasting") and 2 ("Data") cover goal definition; data collection, characterization, visualization, and pre-processing. 
@@ -206,6 +207,7 @@ lines(mydensity)
 #plot actual values from the validation
 plot(valid.ts, xaxt = "n", xlab = "2002-4", yaxt = "n", ylab = "Ridership")
 axis(1, at = seq(2002,2002.75,0.25), labels=c("Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"))
+lines(NaiveRidership$mean, col = 2, lty = 2)
 axis(2, las=2)
 legend(1989,4925, c("Actual","Forecast"), col=1:2, lty=1:2)
 
@@ -387,13 +389,23 @@ lines(valid.ts)
 ses.opt <- ets(train.ts, model = "ANN")
 #forecast this model
 ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
+
+
+```
+
+```{r}
 #accuracy of ses, ANN forecast with alpha = .2
 accuracy(ses.pred, valid.ts)
+ses
+#parameters function for the alpha and the initial state
+ses$par
+```
+
+```{r}
 #accuracy of ses, ANN, no predetermined alpha
 accuracy(ses.opt.pred, valid.ts)
 ses.opt
-#parameters function for the alpha and the initial state
-ses$par
+ses.opt$par
 ```
 
 ##2 Different Uses of Moving Averages
@@ -421,7 +433,8 @@ ses$par
 
 ```{r}
 # moving average by one year
-ma.centered <- ma(ridership.ts, order = 12) 
+ma.centered <- ma(ridership.ts, order = 12)
+
 ```
 
 
@@ -543,33 +556,65 @@ nTrain <- length(diff.twice.ts) - nValid
 train.ts <- window(diff.twice.ts, start = c(1992, 2), end = c(1992, nTrain + 1)) 
 #create validation period window
 valid.ts <- window(diff.twice.ts, start = c(1992, nTrain + 2), end = c(1992, nTrain + 1 + nValid)) 
+```
+
+
+###ANN parameters and alpha = 0.2
+
+```{r}
 #simple exponential smoothing with no trend and no seasonality model
 ses <- ets(train.ts, model = "ANN", alpha = 0.2)
-#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in. 
+#forecast the above ses model. The forecast is flat because the trend and seasonality are not configured in.
 ses.pred <- forecast(ses, h = nValid, level = 0) 
 #the twice differenced forecast. 
-ses.pred 
-#plotting the frecast
+#ses.pred
+```
+
+**Accuracy of ANN, alpha = 0.2**
+
+```{r}
+#accuracy of ses, ANN forecast with alpha = .2
+accuracy(ses.pred, valid.ts)
+```
+
+**Plot ANN, alpha = 0.2**
+
+```{r}
+#plotting the forecast
 plot(ses.pred, ylim = c(-250, 300), ylab = "Ridership (Twice-Differenced)", xlab = "Time", bty = "l", xaxt = "n", xlim = c(1991,2006.25), main ="", flty = 2) 
 axis(1, at = seq(1991, 2006, 1), labels = format(seq(1991, 2006, 1)))
-
 lines(ses.pred$fitted, lwd = 2, col = "blue")
 lines(valid.ts)
 ```
 
 
+**Model determines the alpha**
+
+```{r}
+#Model determines the alpha
+ses.opt <- ets(train.ts, model = "ANN")
+#forecast this model
+ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
+#accuracy of ses, ANN, no predetermined alpha
+accuracy(ses.opt.pred, valid.ts)
+```
 
 **Comparison of 2 simple models**
 
 ```{r}
-ses.opt <- ets(train.ts, model = "ANN")
-#forecast this model
-ses.opt.pred <- forecast(ses.opt, h = nValid, level = 0)
-#accuracy of ses, ANN forecast with alpha = .2
+#compare the accuracy side by side
 accuracy(ses.pred, valid.ts)
-#accuracy of ses, ANN, no predetermined alpha
 accuracy(ses.opt.pred, valid.ts)
+
+
 ses.opt
+ses.opt$par
+
+```
+
+
+```{r}
+ses
 #parameters function for the alpha and the initial state
 ses$par
 ```
