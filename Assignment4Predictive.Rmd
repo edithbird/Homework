@@ -23,7 +23,7 @@ A second exponential smoothing method called Holt Winter's is appropriate for da
 
 2.	Explain how the value of alpha affects the simple exponential smoothing method.
 
-$\alpha$, a user chosen constant between 0-1, determines the model's rate of learning, i.e., how much influence the most recent values in the time series have on the forecast. A value close to 1, fast learning,  means that the the most recent data has the greatest impact on the forecast. Conversely, a value close to 0 indicated the model is a slow learner and the recent data have little impact while past data have the greatest influence. 
+$\alpha$, a user chosen parameter, operates as a constant and is valued between 0-1; it determines the model's rate of learning, i.e., how much influence the most recent values in the time series have on the forecast. (Alpha operates simliarly to the user determined W, or window length, in moving averages in that it dictates the importance of newer information in generating the forecast.) A value close to 1, causes the model to learn faster,  meaning that the the most recent data has the greatest impact on the forecast. Conversely, a value close to 0 indicates the model  learns slowly and the recent data have little impact while past data have the greatest influence. 
 
 Because $\alpha$ is far from zero, the level adapts locally,
 
@@ -35,11 +35,19 @@ The $\alpha$ constant is used to smooth the time series that exhibits stationari
 
 $\beta$ is a second smoothing constant that is used in addition to $\alpha$ and it is used in double exponential smoothing, or, Holt Winter's models for **trend** smoothing. A higher $\beta$ value, one that is closer to 1, is chsen when less smoothing is desired; therefore, more weight is plaved on the recent data.  
 
-4.	Describe how you would use differencing to remove a trend from a time series dataset.
+**4.	Describe how you would use differencing to remove a trend from a time series dataset.**
+
+If a forecaster observes a trend in the time series data, but would like to see how a moving average forecast would perform in terms of predictive accuracy, he would have to use differencing to remove this trend. Moving averages are typically forecasting tools for data that exhibits stationarity, not trend or seasonality. In order to adapt the moving average forecast for data with a linear trend, the user first performs differencing with a lag on 1. Once this is done, a plot of the data will show no visible trend. If the initial data set shows a quadratic or exponential trend, another round of lag-1 differencing is required on the already differenced data. Performing differencing with a lag of 1 is simply done by taking the difference between every 2 consecutive values for the series. 
+
+"One advantage of differencing over other methods (e.g., a regression with a trend - see Chapter 6) is that differencing does not assume that the trend is global: i.e., the trend shape is fixed throughout the entire period."
+
+Shmueli, Galit; Lichtendahl Jr, Kenneth C.. Practical Time Series Forecasting with R: A Hands-On Guide [2nd Edition] (Practical Analytics) (Page 85). Axelrod Schnall Publishers. Kindle Edition. 
+
+
 
 **5.	When using moving average for forecasting, how should you choose the appropriate window size, w?**
 
-When using the moving average forecasting model, the user gets to choose the width of the trailing moving average window, or **W**. Striking a balance between under and over forecasting may require some trial and error. A first step is to visualize the data series. If the series shows seasonal pattern, a **W** of the length of the seasonal cycle may be a good choice. 
+When using the moving average forecasting model, the user gets to choose the width of the trailing moving average window, or **W**. Striking a balance between under and over forecasting may require some trial and error. A first step is to visualize the data series. If the series shows seasonal pattern, a W of the length of the seasonal cycle may be a good choice. 
 
 Domain knowledge regarding how fast the series changes and regarding the relevance of past observations will assist the forecaster in making this decision. 
 
@@ -48,15 +56,137 @@ Trial and error is also part of the decision. Seeing how the model performs with
 
 #Homework:
 
-Please answer Chapter 5, questions 2, 5, and 8 from the text (p. 108 - 116).  
+Please answer Chapter 5, questions 2, 5, and 8 from the text (p. 108 - 116).
+
+
 
 
 ##2. 
 Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?
 
+A value very close to 1. 
+
+#Testing for question 2 on HW
+
+**trailing ma**
+
+```{r}
+ridership <- read.csv("Amtrak.csv")
+##convert data to a time series
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+```
+
+
+```{r}
+library(zoo)
+library(forecast)
+#3 year validation period window
+nValid <- 36
+#training period
+nTrain <- length(ridership.ts) - nValid
+#training window
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+#validation window
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 12, align = "right")
+#last value because want a lag 
+#last.ma <- tail(ma.trailing, 1)
+#ma.trailing.pred <-ts(rep(last.ma, nValid), start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid), freq = 12)
+forecast.ma.trailing <- forecast(ma.trailing, h = nValid, level = 0)
+accuracy(forecast.ma.trailing, valid.ts)
+```
+
+**ses**
+```{r}
+ses.ridership <- ets(train.ts, model = "ANN", alpha = .98)
+
+
+ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
+accuracy(ses.pred, valid.ts)
+```
+
 
 ##5. 
 Forecasting Department Store Sales
+
+```{r}
+library(dplyr)
+DeptSales <- read.csv("DeptStoreSales.csv", header = TRUE, stringsAsFactors = FALSE)
+
+
+DeptSales$Yr_Qtr <- c("Year 1 Q-1", "Year 1 Q-2", "Year 1 Q-3", "Year 1 Q-4", "Year 2 Q-1", "Year 2 Q-2", "Year 2 Q-3", "Year 2 Q-4", "Year 3 Q-1", "Year 3 Q-2", "Year 3 Q-3", "Year 3 Q-4", "Year 4 Q-1", "Year 4 Q-2", "Year 4 Q-3", "Year 4 Q-4", "Year 5 Q-5", "Year 5 Q-2", "Year 5 Q-3", "Year 5 Q-4", "Year 6 Q-1", "Year 6 Q-2", "Year 6 Q-3", "Year 6 Q-4")
+DeptSales <- DeptSales %>% select(Yr_Qtr, Sales)
+head(DeptSales)
+DeptSales.ts <- ts(DeptSales$Sales/1000, start = c(1,1), frequency = 4)
+plot(DeptSales.ts, xlab = "Year", ylab = "Sales in thousands", ylim = c(25, 100), bty = "l", col = 3, type = "o", lwd = 2) 
+```
+
+```{r}
+#trend line
+DeptSales.lm <- tslm(DeptSales.ts ~ trend + I(trend^2)) 
+par(mfrow = c(2, 1)) 
+#plot series
+plot(DeptSales.ts, xlab = "Time", ylab = "DeptSales", #ylim = c(40, 100), 
+     bty = "l") 
+#plot fitted trend line
+lines(DeptSales.lm$fitted, lwd = 2) 
+#zoom into 4 years
+#first create window
+DeptSales.ts.zoom <- window(DeptSales.ts, start = c(1, 1), end = c(3, 4))
+#plot zooned in data
+plot(DeptSales.ts.zoom, xlab = "Time", ylab = "Dept Store Sales", ylim = c(40, 100), bty = "l") 
+
+```
+
+```{r}
+ggseasonplot(DeptSales.ts, ylab = "DeptSales", main = "Seasonal Plot for Dept Store Sales", lwd = 2) + 
+  
+  
+  guides(fill = guide_legend(reverse = TRUE)) + theme_bw() +
+        theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+```
+
+**Ridership boken out by month**
+
+```{r}
+
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1992,2004)
+yrange <- range(ridership.ts)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Monthly Plot Dept Store Sales ", bty="l", las=1)
+colors <- rainbow(12) 
+linetype <- c(1:12) 
+plotchar <- c(1:12)
+axis(1, at=seq(1992,2004,1), labels=format(seq(1992,2004,1)))
+for (i in 1:12) { 
+  currentMonth <- subset(ridership.ts, cycle(ridership.ts)==i)
+  lines(seq(1992, 1992 +length(currentMonth)-1,1), currentMonth, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Ridership Broken Out by Month")
+legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
+
+
+
+```
+
+
+
+
+
+
+
+
+```{r}
+
+
+
+```
+
+
+
+
 
 a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
 
