@@ -1,0 +1,94 @@
+---
+title: "Unit 4 Demo"
+author: "Christine Iyer"
+date: "March 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(forecast)
+library(zoo)
+```
+
+
+```{r}
+
+#Set working directory to the file, after reversing the slashes
+setwd("C:/Users/Chris Iyer/Documents/AirTravel/data")
+#load AirTravel
+air <- read.csv("CopyOfAirTravel.csv")
+#look at data
+head(air)
+min(air$Air)
+max(air$Air)
+head(air)
+tail(air)
+#create ts object
+air.ts <- ts(air$Air, start = c(1990, 1), frequency = 12)
+#another way to find min and max values in the ts. Look over to environment to find data
+yrange <- range(air.ts)
+#plot 
+plot(c(1990, 2001), yrange, type = "n", xlab = "Year", ylab = "Air Revenue Passenger Miles (in Millions)", bty = "l", xaxt = "n", yaxt = "n")
+#add lines
+lines(air.ts, bty = "l")
+#x axis at(), seq()
+axis(1, at = seq(1990, 2000,1), labels = format(seq(1990, 2000, 1)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(29000000, 68000000, 5000000), labels = format(seq(29.5, 68, 5.0)), las = 2)
+```
+
+**Looking at the plot, we see there is trend and seasonality. Therefore moving average is not the best forecasting method. However centered moving average can be used to explore trend.**
+
+In order to look for trend, will do a centered moving average. 
+
+Step 1. Partition the data
+
+```{r}
+nValid <- 12
+nTrain <- length(air.ts) - nValid
+#create windows
+airTrain <- window(air.ts, end = c(1990, nTrain))
+airValidate <- window(air.ts, start = c(1990, nTrain + 1))
+```
+
+Aside, compute a trailing moving average. This is used for forecasting. So it's not appropriate with this dataset, it's just for practice. Use a window size of 12. rollmean()
+
+```{r}
+trailingAir <- rollmean(airTrain, k = 12, align = "right")
+trailingAir[1]
+
+```
+
+Centered Moving Average. Used for visualization. ma() and order = 12
+
+```{r}
+centeredAir <- ma(airTrain, order = 12)
+```
+
+
+**Begin building a plot**
+```{r}
+#range of y axis
+yrange <- range(air.ts)
+#basic plot xaxt() and yaxt() suppress the axis
+plot(c(1990, 2001), yrange, type = "n", xlab = "Year", ylab = "Air Revenue Passenger Miles (in Millions)", bty = "l", xaxt = "n", yaxt = "n")
+
+#add ts lines, bty = "l" seems to be unnecessary here since used in the previous command. bty = dictates the shape of the box surrounding the plot
+lines(air.ts, bty = "l")
+#add x axis, remember will forecast out one year so need to extend the axis, las = 2 makes sure all years are labeled, las = 0 skips 1
+axis(1, at = seq(1990, 2001, 1), labels = format(seq(1990, 2001, 1)
+                                                 ))
+#add y axis, reformat numbers.
+axis(2, at = seq(29000000, 68000000, 5000000), labels = format(seq(29.5, 68, 5.0)), las = 2)
+#add trailing lines
+lines(trailingAir, col = "blue")
+lines(centeredAir, col = "green")
+#add legend, no box around it
+legend(1990, 65000000, c("Air Miles Travelled", "Trailing Moving Average", "Centered Moving Average"), lty = c(1,1,1), col = c("black", "blue", "green"), bty = "n")
+```
+
+**Centered MA shows a global trend, upward and linear and centered MA is almost always above the forecasting MA. Moving average can't capture seasonality.**
