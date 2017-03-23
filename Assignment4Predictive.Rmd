@@ -110,41 +110,94 @@ accuracy(ses.pred, valid.ts)
 ##5. 
 Forecasting Department Store Sales
 
+
 ```{r}
 library(dplyr)
+library(forecast)
 DeptSales <- read.csv("DeptStoreSales.csv", header = TRUE, stringsAsFactors = FALSE)
-
 
 DeptSales$Yr_Qtr <- c("Year 1 Q-1", "Year 1 Q-2", "Year 1 Q-3", "Year 1 Q-4", "Year 2 Q-1", "Year 2 Q-2", "Year 2 Q-3", "Year 2 Q-4", "Year 3 Q-1", "Year 3 Q-2", "Year 3 Q-3", "Year 3 Q-4", "Year 4 Q-1", "Year 4 Q-2", "Year 4 Q-3", "Year 4 Q-4", "Year 5 Q-5", "Year 5 Q-2", "Year 5 Q-3", "Year 5 Q-4", "Year 6 Q-1", "Year 6 Q-2", "Year 6 Q-3", "Year 6 Q-4")
 DeptSales <- DeptSales %>% select(Yr_Qtr, Sales)
 head(DeptSales)
-DeptSales.ts <- ts(DeptSales$Sales/1000, start = c(1,1), frequency = 4)
-plot(DeptSales.ts, xlab = "Year", ylab = "Sales in thousands", ylim = c(25, 100), bty = "l", col = 3, type = "o", lwd = 2) 
+DeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 4)
+#linear trend line
+DeptSales.Linear <- tslm(DeptSales.ts ~ trend)
+sales.lm.pred <- forecast(DeptSales.Linear, h = nValid, level = 0)
+#quadratic trend line
+DeptSales.quad <- tslm(DeptSales.ts ~ trend + I(trend^2))
+sales.quad <- forecast(DeptSales.quad, h = nValid, level = 0)
+
+
+yrange <- range(DeptSales.ts)
+
+plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n")
+
+
+
+#
+
+
+
+axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(DeptSales.Linear$fitted , col = "blue")
+lines(DeptSales.quad$fitted, col = "red")
+legend(1, 100, c("Dept Store Sales", "Linear Trend", "Quad Trend"), lty = c(1,1,1), col = c("green", "blue", "red"), lwd = c(2,2,2), bty = "n")
+
+#plot(DeptSales.ts, type = "n", xlab = "Year", ylab = "Sales", ylim = c(25000, 105000), bty = "l", col = 3, type = "o", lwd = 2, xaxt = "n", yaxt = "n") 
 ```
 
+
 ```{r}
-#trend line
-DeptSales.lm <- tslm(DeptSales.ts ~ trend + I(trend^2)) 
+yrange <- range(DeptSales.ts)
+#plot
+plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n")
+lines(DeptSales.ts, bty = "l", lwd = 2)
+axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40000, 105000, 10000)), las = 2)
+lines(DeptSales.Linear$fitted , col = "blue")
+lines(DeptSales.quad$fitted, col = "green")
+legend(1, 105000, c("Dept Store Sales", "Linear Trend", "Quadratic Trend"), lty = c(1,1,1), col = c("black", "blue", "green"), lwd = c(2,2,2), bty = "n")
+
+
+
+
+
+
+```
+
+
+
+lines(trailingMA, col = "blue", lwd = 2)
+lines(centeredMA, col = "green", lwd = 2)
+legend(1, 100, c("Dept Store Sales", "Trailing Moving Average", "Centered Moving Average"), lty = c(1,1,1), col = c("black", "blue", "green"), lwd = c(2,2,2), bty = "n")
+
+```{r}
+
+#linear summary
+summary(DeptSales.Linear)
+#Quad Summary
+summary(sales.quad)
 par(mfrow = c(2, 1)) 
 #plot series
 plot(DeptSales.ts, xlab = "Time", ylab = "DeptSales", #ylim = c(40, 100), 
      bty = "l") 
 #plot fitted trend line
-lines(DeptSales.lm$fitted, lwd = 2) 
+#lines(DeptSales.lm$fitted, lwd = 2) 
 #zoom into 4 years
 #first create window
 DeptSales.ts.zoom <- window(DeptSales.ts, start = c(1, 1), end = c(3, 4))
 #plot zooned in data
-plot(DeptSales.ts.zoom, xlab = "Time", ylab = "Dept Store Sales", ylim = c(40, 100), bty = "l") 
+plot(DeptSales.ts.zoom, xlab = "Time", ylab = "Dept Store Sales", ylim = c(25000, 105000), bty = "l") 
+
 
 ```
 
-```{r}
-ggseasonplot(DeptSales.ts, ylab = "DeptSales", main = "Seasonal Plot for Dept Store Sales", lwd = 2) + 
-  
-  
-  guides(fill = guide_legend(reverse = TRUE)) + theme_bw() +
-        theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+```{r, echo=TRUE}
+
+ggseasonplot(DeptSales.ts, ylab = "DeptSales", main = "Seasonal Plot for Dept Store Sales") 
+#+ guides(fill = guide_legend(reverse = TRUE)) 
+#+ theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
 ```
 
 **Ridership boken out by month**
@@ -172,12 +225,6 @@ legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title
 ```
 
 
-
-
-
-
-
-
 ```{r}
 
 
@@ -185,10 +232,69 @@ legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title
 ```
 
 
-
-
-
 a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
+
+**Moving average of raw series** This is not a method for forecasting because it does not accomodate trend or seasonality, 2 components in this data series.  
+
+Forecast the data with a trailing moving average
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+#trailing moving average
+trailingMA <- rollmean(salesTrain, k = 3, align = "right")
+trailingMA[1]
+centeredMA <- ma(salesTrain, order = 3)
+forecast(trailingMA, h = validLength)
+#accuracy(forecast(trailingMA, h = validLength))
+yrange <- range(DeptSales.ts)
+#plot
+plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n")
+lines(DeptSales.ts, bty = "l", lwd = 2)
+axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+yrange
+#seq() from, to, by in increments
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(trailingMA, col = "blue", lwd = 2)
+lines(centeredMA, col = "green", lwd = 2)
+legend(1, 100, c("Dept Store Sales", "Trailing Moving Average", "Centered Moving Average"), lty = c(1,1,1), col = c("black", "blue", "green"), lwd = c(2,2,2), bty = "n")
+```
+
+
+* Moving average of deseasonalized series 
+
+```{r}
+#difference the quarterly series for seasonality. lag = 4
+#set up a plot with 2 rows and 2 columns
+par(mfrow = c(2,2))
+#plot the original
+plot(DeptSales.ts, ylab = "Dept Store Sales", xlab = "Year", bty = "l", main = "Dept Store Sales")
+#plot the lag-4 difference
+plot(diff(DeptSales.ts, lag = 4), ylab="Lag-4", xlab="Year", bty="l", main="Lag-4 Difference")
+plot(diff(DeptSales.ts, lag = 1), ylab="Lag-1", xlab="Year", bty="l", main="Lag-1 Difference")
+#plot(diff(diff(DeptSales.ts), lag = 4), lag = 1)
+
+lag4and1 <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+plot(lag4and1, ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="Twice-Differenced (Lag-4, Lag-1)")
+
+```
+
+
+* Simple exponential smoothing of the raw series 
+* Double exponential smoothing of the raw series 
+* Holt-Winter's exponential smoothing of the raw series
+
+
+**Is there trend?**
+
+```{r}
+
+
+
+```
+
 
 b. A forecaster was tasked to generate forecasts for 4 quarters ahead. She therefore partitioned the data so that the last 4 quarters were designated as the validation period. The forecaster approached the forecasting task by using multiplicative Holt-Winter's exponential smoothing. Specifically, you should call the ets function with the parameters restrict=FALSE, model = "ZZZ" and use the smoothing constants of $\alpha=0.2$ $\alpha=0.2$, $=\beta=0.15$ $\beta=0.15$, and $\lambda=0.05$ $\lambda=0.05$.
 
