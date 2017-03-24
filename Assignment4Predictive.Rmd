@@ -80,6 +80,7 @@ ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(
 ```{r}
 library(zoo)
 library(forecast)
+library(ggplot2)
 #3 year validation period window
 nValid <- 36
 #training period
@@ -132,12 +133,6 @@ yrange <- range(DeptSales.ts)
 
 plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n")
 
-
-
-#
-
-
-
 axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
 lines(DeptSales.Linear$fitted , col = "blue")
@@ -178,7 +173,7 @@ legend(1, 100, c("Dept Store Sales", "Trailing Moving Average", "Centered Moving
 summary(DeptSales.Linear)
 #Quad Summary
 summary(sales.quad)
-par(mfrow = c(2, 1)) 
+par(mfrow = c(1, 2)) 
 #plot series
 plot(DeptSales.ts, xlab = "Time", ylab = "DeptSales", #ylim = c(40, 100), 
      bty = "l") 
@@ -186,18 +181,38 @@ plot(DeptSales.ts, xlab = "Time", ylab = "DeptSales", #ylim = c(40, 100),
 #lines(DeptSales.lm$fitted, lwd = 2) 
 #zoom into 4 years
 #first create window
-DeptSales.ts.zoom <- window(DeptSales.ts, start = c(1, 1), end = c(3, 4))
+DeptSales.ts.zoom <- window(DeptSales.ts, start = c(1, 1), end = c(1, 4))
 #plot zooned in data
-plot(DeptSales.ts.zoom, xlab = "Time", ylab = "Dept Store Sales", ylim = c(25000, 105000), bty = "l") 
+plot(DeptSales.ts.zoom, xlab = "Time", ylab = "Dept Store Sales", ylim = c(25000, 105000), bty = "l", main = "Dept Store Sales \nZoomed Q-1-Q-2") 
 
 
 ```
 
-```{r, echo=TRUE}
 
-ggseasonplot(DeptSales.ts, ylab = "DeptSales", main = "Seasonal Plot for Dept Store Sales") 
-#+ guides(fill = guide_legend(reverse = TRUE)) 
-#+ theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+
+```{r, echo=TRUE}
+library(ggplot2)
+
+bold.text <- element_text(face = "bold", color = "black", size = 10)
+legendT <- "Legend"
+
+bold.italic <- element_text(face = "bold.italic", color = "black", size = 11)
+ggseasonplot(DeptSales.ts/1000, ylab = "Dept Store Sales (thousands)", xlab = "Quarter",  main = "Seasonal Plot for Dept Store Sales") + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) + 
+  guides(fill = guide_legend(reverse = TRUE)) +  
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  
+  ## axis.text.x for x axis only
+theme(axis.text = bold.text) +
+theme(title = bold.italic, axis.title = bold.italic) +
+  geom_line(size = 1) +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
 ```
 
 **Ridership boken out by month**
@@ -220,17 +235,7 @@ for (i in 1:12) {
 title("Ridership Broken Out by Month")
 legend(2002.35, 80, 1:12, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Month", xpd=NA)
 
-
-
 ```
-
-
-```{r}
-
-
-
-```
-
 
 a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
 
@@ -265,22 +270,30 @@ legend(1, 100, c("Dept Store Sales", "Trailing Moving Average", "Centered Moving
 
 * Moving average of deseasonalized series 
 
+
+
 ```{r}
-#difference the quarterly series for seasonality. lag = 4
 #set up a plot with 2 rows and 2 columns
 par(mfrow = c(2,2))
 #plot the original
 plot(DeptSales.ts, ylab = "Dept Store Sales", xlab = "Year", bty = "l", main = "Dept Store Sales")
+#lag 4 differencing
+lag4diff <- diff(DeptSales.ts, lag=4)
 #plot the lag-4 difference
-plot(diff(DeptSales.ts, lag = 4), ylab="Lag-4", xlab="Year", bty="l", main="Lag-4 Difference")
-plot(diff(DeptSales.ts, lag = 1), ylab="Lag-1", xlab="Year", bty="l", main="Lag-1 Difference")
-#plot(diff(diff(DeptSales.ts), lag = 4), lag = 1)
+plot(lag4diff,  ylab="Lag-4", xlab="Year", bty="l", main="Lag-4 Differencing \nDe-Seasonalized")
+#lag-1 differencing for detrending
+lag1diff <- diff(DeptSales.ts, lag=1)
 
-lag4and1 <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
-plot(lag4and1, ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="Twice-Differenced (Lag-4, Lag-1)")
+#plot the lag-1 difference for detrending
+plot(lag1diff,  ylab="Lag-1", xlab="Year", bty="l", main="Lag-1 Differencing \nDe-trended")
+
+#double differenced
+doubleDiff <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+#plot double differenced
+plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+
 
 ```
-
 
 * Simple exponential smoothing of the raw series 
 * Double exponential smoothing of the raw series 
