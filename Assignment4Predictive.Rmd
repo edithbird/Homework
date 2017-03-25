@@ -173,7 +173,7 @@ legend(1, 100, c("Dept Store Sales", "Trailing Moving Average", "Centered Moving
 par(mfrow = c(1, 2)) 
 plot(DeptSales.ts/ 1000, xlab = "Time", ylab = "Dept Store Sales (thousands)", ylim = c(25, 100), 
      bty = "l", main = "Dept Store Sales")
-DeptSales.ts.zoom <- window(DeptSales.ts/1000, start = c(1, 1), end = c(2, 1))
+DeptSales.ts.zoom <- window(DeptSales.ts/1000, start = c(1, 1), end = c(2, 4))
 plot(#c(1,4), 
      DeptSales.ts.zoom, type = "n", xlab = "Quarter", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
 
