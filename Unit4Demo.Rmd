@@ -211,4 +211,143 @@ arrows(2000, 68500000, 2001, 68500000, code=3, length=0.1)
 text(2000.5, 73000000, "Validation")
 ```
 
+###Differencing
+
+```{r}
+#detrend air.ts
+lag1 <- diff(airTrain, lag = 1)
+#deseasonalize
+lag12 <- diff(airTrain, lag = 12)
+#double differencing
+lag1and12 <- diff(diff(airTrain, lag = 1), lag = 12)
+#doesn't matter which comes first
+# lag12and1 <- diff(diff(airTrain, lag = 12), lag = 1)
+# head(lag1and12)
+# head(lag12and1)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(air.ts)
+plot(lag1)
+plot(lag12)
+plot(lag1and12)
+```
+
+###Calculating the point forecast 
+
+```{r}
+#mean forecast
+meanForecast <- meanf(diff(diff(airTrain, lag = 1), lag = 12), h = 12)
+#Moving Average
+maForecast <- rollmean(diff(diff(airTrain, lag = 1), lag = 12), k = 12, aligh = "right")
+#forecast with the double differenced data
+MAForecastforecast <- forecast(maForecast, h = validLength)
+#SES with double differenced data
+#SESAir <- ets(airTrain, model = "ANN")
+SESAir <- ets(diff(diff(airTrain, lag = 1), lag = 12), model = "ANN")
+MeanForecastforecast <- forecast(meanForecast, h = validLength)
+SESAirForecast <- forecast(SESAir, h = validLength, level = 0)
+MeanForecastforecast
+MAForecastforecast
+SESAirForecast$mean
+```
+
+**Reseaonalize the meanf()**
+
+```{r}
+realMeanForecasts <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realMeanForecasts[i] <- meanForecast$mean [i]  + airTrain[(trainLength+i)-validLength] + (airTrain[trainLength] - airTrain[trainLength - validLength])
+  } else{
+    realMeanForecasts[i] <- meanForecast$mean[i] + airTrain[(trainLength+i)-validLength] + (realMeanForecasts[i-1] - airTrain[trainLength+i-1-validLength])
+  }
+}
+#actual MA forecast
+realMeanForecasts
+
+
+```
+
+
+```{r}
+#reseasonalize and trend
+realForecasts <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecasts[i] <- MAForecastforecast$mean[i]  + airTrain[(trainLength+i)-validLength] + (airTrain[trainLength] - airTrain[trainLength - validLength])
+  } else{
+    realForecasts[i] <- MAForecastforecast$mean[i] + airTrain[(trainLength+i)-validLength] + (realForecasts[i-1] - airTrain[trainLength+i-1-validLength])
+  }
+}
+#actual MA forecast
+realForecasts
+```
+
+```{r}
+SESrealForecasts <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    SESrealForecasts[i] <- SESAirForecast$mean [i]  + airTrain[(trainLength+i)-validLength] + (airTrain[trainLength] - airTrain[trainLength - validLength])
+  } else{
+    SESrealForecasts[i] <- SESAirForecast$mean[i] + airTrain[(trainLength+i)-validLength] + (SESrealForecasts[i-1] - airTrain[trainLength+i-1-validLength])
+  }
+}
+#actual SES forecast
+SESrealForecasts
+```
+
+**Plot the MA forecast against the Actual**
+
+```{r}
+yrange <- range(air.ts)
+plot(c(1990, 2001), c(yrange[1], yrange[2]+5000000), type="n", xlab="Year", ylab="Air Revenue Passenger Miles (millions)", bty="l", xaxt="n", yaxt="n")
+lines(air.ts, bty = "l")
+# Add the x-axis
+axis(1, at=seq(1990,2001,1), labels=format(seq(1990,2001,1)))
+
+# Add the y-axis
+axis(2, at=seq(29500000,68000000,5000000), labels=format(seq(29.5,68,5.0)), las=2)
+lines(seq(2000, 2001-1/validLength, 1/validLength), realForecasts, col="red", lwd=2, lty=2)
+
+lines(seq(2000, 2001-1/validLength, 1/validLength), SESrealForecasts, col="blue", lwd=2, lty=2)
+# Add the "visual breakpoints"
+abline(v=2000)
+arrows(1990, 68500000, 2000, 68500000, code=3, length=0.1)
+text(1995, 70000000, "Training")
+abline(v=2001)
+arrows(2000, 68500000, 2001, 68500000, code=3, length=0.1)
+text(2000.5, 73000000, "Validation")
+
+
+```
+
+**Re-Seasonalized and Re-Trended Forecasts**
+
+```{r}
+Actual <- tail(air$Air, 12)
+Actual
+yrange <- range(Actual)
+
+plot(c(1, 12), c(yrange[1], yrange[12]+5000000), type="n", xlab="Month", ylab="Air Revenue Passenger Miles (millions)", bty="l", xaxt="n", yaxt="n")
+axis(1, at=seq(1, 12), labels=format(seq(1, 12, 1), ylab = "Month"))
+
+# Add the y-axis
+axis(2, at=seq(30000000,98000000,5000000), labels=format(seq(30,98,5.0)), las=2)
+lines(Actual, type="l", bty="l", lwd = 2)
+lines(realForecasts, type="l", bty="l", col = "blue", lwd = 2)
+lines(SESrealForecasts, type="l", bty="l", col = "red", lwd = 2)
+lines(realMeanForecasts, type="l", bty="l", col = "orange", lwd = 2)
+legend(10, 45000000, c("Actual", "MA", "Meanf()", "SES"), lty = c(1,1,1,1), col = c("black", "blue", "orange", "red"), bty = "n", lwd = c(2,2,2,2))
+
+```
+
+```{r}
+range(air.ts)
+```
+
 
