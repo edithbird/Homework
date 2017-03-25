@@ -1,0 +1,297 @@
+---
+title: "CopyOf4"
+author: "Christine Iyer"
+date: "March 25, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r Libraries, message=FALSE, warning=FALSE, include=FALSE}
+library(knitr)
+library(forecast)
+library(zoo)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r Load data, message=FALSE, warning=FALSE, include=FALSE}
+setwd("/Users/Chris Iyer/Documents/")
+ridership <- read.csv("Amtrak.csv")
+kable(head(ridership))
+##convert data to a time series
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+#read in Dept Store Sales
+DeptSales <- read.csv("DeptStoreSales.csv", header = TRUE, stringsAsFactors = FALSE)
+
+DeptSales$Yr_Qtr <- c("Year 1 Q-1", "Year 1 Q-2", "Year 1 Q-3", "Year 1 Q-4", "Year 2 Q-1", "Year 2 Q-2", "Year 2 Q-3", "Year 2 Q-4", "Year 3 Q-1", "Year 3 Q-2", "Year 3 Q-3", "Year 3 Q-4", "Year 4 Q-1", "Year 4 Q-2", "Year 4 Q-3", "Year 4 Q-4", "Year 5 Q-5", "Year 5 Q-2", "Year 5 Q-3", "Year 5 Q-4", "Year 6 Q-1", "Year 6 Q-2", "Year 6 Q-3", "Year 6 Q-4")
+DeptSales <- DeptSales %>% select(Yr_Qtr, Sales)
+kable(head(DeptSales))
+DeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 4)
+```
+
+Please answer Chapter 5, questions 2, 5, and 8 from the text (p. 108 - 116).
+
+
+
+
+##2. 
+Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?
+
+In order to get a similiar result for a moving average with a short window span and a simple exponential smoothing forecast, the *SES* needs an $\alpha$ value that is very close to 1. A high $\alpha$ value translates to a fast learning model meaning the most recent values have the most impact on the forecast and past values are less important. 
+
+**Below is a representation of the actual Amtrak ridership series and the training period fit of the moving average with a window of 3, and the simple exponential smoothing model with an alpha of 0.98. The results are ver similiar.**
+
+```{r}
+nValid <- 36
+nTrain <- length(ridership.ts) - nValid
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+#trailing moving average of training period
+ma.trailing <- rollmean(train.ts, k = 3, align = "right")
+forecast.ma.trailing <-forecast(ma.trailing, h = nValid, level = 0)
+ses.ridership <- ets(train.ts, model = "ZZZ", alpha = .98)
+ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
+yrange <- range(ridership.ts)
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n")
+lines(ridership.ts, bty = "l")
+axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 100), labels = format(seq(1000, 3000, 100)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "blue"
+      #, lty = 2
+      )
+lines(ses.pred$fitted, col = "red", lty = 3)
+legend(1999, 1600, c("ridership", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 3), col = c("black", "blue", "red"), bty = "n")
+```
+
+##5. 
+**Forecasting Department Store Sales**
+
+The best forecasting model can only be determined by considering the components of the Department Store Sales data series, namely error, level, trend, and seasonality. While all series have error and level, not all have the latter 2 components. The first step in settling on the best models is to evaluate the series for trend and seasonality. 
+
+**Trend in 6 years of quarterly sales data**
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+#linear trend line
+DeptSales.Linear <- tslm(DeptSales.ts ~ trend)
+sales.lm.pred <- forecast(DeptSales.Linear, h = nValid, level = 0)
+#quadratic trend line
+DeptSales.quad <- tslm(DeptSales.ts ~ trend + I(trend^2))
+sales.quad <- forecast(DeptSales.quad, h = nValid, level = 0)
+DeptSales.Poly <- tslm(DeptSales.ts ~ poly(trend,2))
+yrange <- range(DeptSales.ts)
+
+plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+
+axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(lines(DeptSales.ts, bty = "l", lwd = 2))
+lines(DeptSales.Linear$fitted , col = "blue", lwd = 2)
+#lines(DeptSales.quad$fitted, col = "red", lwd = 2, lty = 1)
+lines(DeptSales.Poly$fitted, col = "red", lwd = 2)
+legend(1, 100000, c("Dept Store Sales", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+**Trend in the same series with the data aggregated annually**
+
+The second order polynomial trend line mirrors the aggregated data. 
+
+```{r}
+# Aggregate by year and plot it
+SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
+YRange <- range(SalesYearly)
+plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(2, at = seq(0, 500000, 10000), labels = format(seq(0, 500, 10)), las = 2)
+lines(SalesYearly, bty = "l", lwd = 2, lty = 1)
+YrSales.Linear <- tslm(SalesYearly ~ trend)
+YrSales.Poly <- tslm(SalesYearly ~ poly(trend,2))
+lines(YrSales.Linear$fitted , col = "blue", lty = 1, lwd = 2)
+lines(YrSales.Poly$fitted, col = "Red", lwd = 2, lty = 3)
+legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,3), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+Looking at how each quarter behaves over time, we see an obvious upward trend in each. The dramatic quarterly fluctuations in sales during each year makes it essential that an appropriate model is used to forecast this data series.
+
+```{r}
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1,6)
+yrange <- range(DeptSales.ts/1000)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Quarterly Sales", bty="l", las=1)
+colors <- c("violet", "red", "green", "blue")
+#colors <- terrain.colors(4, alpha = 1) 
+linetype <- c(1,1,1,1) 
+plotchar <- c(1:4)
+axis(1, at=seq(1,4,1), labels=format(seq(1,4,1)))
+for (i in 1:4) { 
+  currentQu <- subset(DeptSales.ts/1000, cycle(DeptSales.ts/1000)==i)
+  lines(seq(1, 1 +length(currentQu)-1,1), currentQu, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Sales Broken Out by Quarter")
+legend(6, 90, 1:4, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Quarter", xpd=NA)
+```
+
+Based on the visualizations above, I would conclude there is some trend, perhaps weak, to the Department Store Sales series. In evaluating for a forecast model, I would test various ones with and without adjusting for trend when necessary. 
+
+**Seasonality**
+
+There is indisputably a seasonal component to the Dept. Store Sales series. Quarters behave the same throughout the year. 
+
+```{r}
+bold.text <- element_text(face = "bold", color = "black", size = 10)
+legendT <- "Legend"
+
+bold.italic <- element_text(face = "bold.italic", color = "black", size = 11)
+ggseasonplot(DeptSales.ts/1000, ylab = "Dept Store Sales (thousands)", xlab = "Quarter",  main = "Seasonal Plot for Dept Store Sales") + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) + 
+  guides(fill = guide_legend(reverse = TRUE)) +  
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  
+  ## axis.text.x for x axis only
+theme(axis.text = bold.text) +
+theme(title = bold.italic, axis.title = bold.italic) +
+  geom_line(size = 1) +
+  theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+
+5a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
+
+* **Moving average of raw series:** This is not a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not not accomodate trend or seasonality, 2 components in this data series.  
+
+* **Moving average of deseasonalized series:** Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonality component and perhaps a trend component. Deseasonalizing the series is essential when forecasting with this method. Deseasonalized data may well be adquate for forecasting with the moving average because there is evidence to support the lack of an impactful trend component. Because we can not conclude a lack of trend with certainty, trial and error is required. If there is no trend, data that is deseasonalized with differencing can be used to forecast with a moving average. Deseasonalizing quarterly data uses a lag of 4. 
+
+Below are plots of the actual Dept Store Sales, the deseasonalized series, the detrended series, and the deseasonalized, detrended series. 
+
+```{r}
+#deseasonalized Dept Store Sales with lag 4 differencing
+lag4diff <- diff(DeptSales.ts, lag=4)
+#deseasonalized and deterended Dept.store data
+lag4lag1diff <- diff(diff(DeptSales.ts, lag=4), lag=1)
+# #valid
+# lag4nValidLength <- 4
+# #training set
+# lag4TrainLength <- length(lag4diff) - lag4nValidLength
+# #windows for lag 4
+# lag4TrainWindow <- window(lag4diff, end = c(1, lag4TrainLength))
+# lag4ValidWindow <- window(lag4diff, start = c(1, lag4TrainLength + 1))
+# #windows for lag 1 lag 4
+# lag4TrainWindow <- window(lag4diff, end = c(1, lag4TrainLength))
+# lag4ValidWindow <- window(lag4diff, start = c(1, lag4TrainLength + 1))
+# 
+# # Set up the plot to have two rows and two columns
+# par(mfrow = c(1,2))
+# plot(DeptSales.ts, ylab = "Dept Store Sales", xlab = "Year", bty = "l", main = "Dept Store Sales")
+# plot(lag4diff,  ylab="Lag-4", xlab="Year", bty="l", main="Lag-4 Differencing \nDe-Seasonalized")
+
+#set up a plot with 2 rows and 2 columns
+par(mfrow = c(2,2))
+#plot the original
+plot(DeptSales.ts, ylab = "Dept Store Sales", xlab = "Year", bty = "l", main = "A. Dept Store Sales")
+#lag 4 differencing
+lag4diff <- diff(DeptSales.ts, lag=4)
+#plot the lag-4 difference
+plot(lag4diff,  ylab="Lag-4", xlab="Year", bty="l", main="B. Lag-4 Differencing \nDe-Seasonalized")
+#lag-1 differencing for detrending
+lag1diff <- diff(DeptSales.ts, lag=1)
+
+#plot the lag-1 difference for detrending
+plot(lag1diff,  ylab="Lag-1", xlab="Year", bty="l", main="C. Lag-1 Differencing \nDe-trended")
+
+#double differenced
+doubleDiff <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+#plot double differenced
+plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+
+
+```
+
+
+* **Simple exponential smoothing of the raw series:** Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. Therefore applying the forecasting method on the raw data series would not be suitable for this task. However, if the data series has been detrended and deseasonalized with double differencing, simple exponential smoothing may be a good model. Below is a table showing the optimal alpha and the appropriate model, 0.9672 and "MNM" respectively and graph showing the ets forecast and fit. 
+
+* **Double exponential smoothing of the raw series:** Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learned when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend "MNM". Therefore double exponential smoothing would not be the optimal model for this series. 
+
+An extension of double exponential smoothing called the  **Holt Winter's** model is appropriate for a data series that has both trend and seasonality components.
+
+* **Holt-Winter's exponential smoothing of the raw  series:**
+
+5b. A forecaster was tasked to generate forecasts for 4 quarters ahead. She therefore partitioned the data so that the last 4 quarters were designated as the validation period. The forecaster approached the forecasting task by using multiplicative Holt-Winter's exponential smoothing. Specifically, you should call the ets function with the parameters restrict=FALSE, model = "ZZZ" and use the smoothing constants of $\alpha=0.2$ $\alpha=0.2$, $=\beta=0.15$ $\beta=0.15$, and $\lambda=0.05$ $\lambda=0.05$.
+
+i. Run this method on the data. Request the forecasts on the validation period. (Note that the forecasted values for the validation set will be different than what the book shows.)
+
+ii. Using the forecasts for the validation set that you came up with in i. above, 
+  *compute the MAPE values for the forecasts of quarters 21-22.
+  
+5c. The fit and the residuals were displayed in the book. 
+  *Please reproduce them with R code. Using all the information from (b) and your generated figures, is this model suitable for forecasting quarters 21 and 22?
+  
+5d. Another analyst decided to take a much simpler approach, and instead of using exponential smoothing he used differencing. 
+
+  *Use differencing to remove the trend and seasonal pattern. Which order works better: first removing trend and then seasonality or the opposite order? 
+
+  *Show the progression of time plots as you difference the data and each final series to provide evidence in support of your answer.
+  
+5e. Forecast quarters 21-22 using the average of the double-differenced series from (d). Remember to use only the training period (until quarter 20), and to adjust back for the trend and seasonal pattern.
+
+5f. Compare the forecasts from (e) to the exponential smoothing forecasts found in (b). Which of the two forecasting methods would you choose? Explain.
+
+5g. What is an even simpler approach that should be compared as a baseline? 
+  *Complete that comparison.
+
+8. Forecasting Australian Wine Sales: Figure 5.14 shows time plots of monthly sales of six types of Australian wines (red, rose, sweet white, dry white, sparkling, and fortified) for 1980-1994. Data available in AustralianWines.xls. 23 The units are thousands of liters. You are hired to obtain short-term forecasts (2-3 months ahead) for each of the six series, and this task will be repeated every month.
+
+(a) Which smoothing method would you choose if you had to choose the same method for forecasting all series? Why? 
+
+(b) Fortified wine has the largest market share of the six types of wine. You are asked to focus on fortified wine sales alone and produce as accurate a forecast as possible for the next two months.
+
+  *Start by partitioning the data using the period until Dec- 1993 as the training period. 
+  
+  *Apply Holt-Winter's exponential smoothing (with multiplicative seasonality) to sales. 
+  
+(c) Create a plot for the residuals from the Holt-Winter's exponential smoothing. 
+
+**i. Based on this plot, which of the following statements are reasonable?**
+
+  *December"s (month 12) are not captured well by the model. 
+  
+  *There is a strong correlation between sales on the same calendar month. 
+  
+  *The model does not capture the seasonality well. 
+  *We should first deseasonalize the data and then apply Holt-Winter's exponential smoothing.
+  
+**ii. How can you handle the above effect with exponential smoothing?**
+
+
+
+
+###Appendix
+**1.** 
+
+Linear Trend Summary
+```{r}
+summary(DeptSales.Linear)
+```
+
+
+
+2nd Order Polynomial Trend Summary
+
+```{r}
+summary(DeptSales.Poly)
+```
+
+
