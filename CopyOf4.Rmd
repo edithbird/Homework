@@ -39,34 +39,95 @@ Please answer Chapter 5, questions 2, 5, and 8 from the text (p. 108 - 116).
 
 
 ##2. 
-Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?
+**Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?**
 
-In order to get a similiar result for a moving average with a short window span and a simple exponential smoothing forecast, the *SES* needs an $\alpha$ value that is very close to 1. A high $\alpha$ value translates to a fast learning model meaning the most recent values have the most impact on the forecast and past values are less important. 
+In order to get an equivalent result for a moving average with a short window span and a simple exponential smoothing forecast, the *SES* needs an $\alpha$ value that is very close to 1. A high $\alpha$ value translates to a fast learning model meaning the most recent values have the most impact on the forecast and past values are less important.
 
-**Below is a representation of the actual Amtrak ridership series and the training period fit of the moving average with a window of 3, and the simple exponential smoothing model with an alpha of 0.98. The results are ver similiar.**
+The pair of plots below show the trailing moving average with a window of 2 in red. The blue line in each represents the simple exponential forecast with a very high and a very low $\alpha$ value respectively. The SES forecast is superimposed on the MA forecast. The plot on the left betrays less of the MA forecast (shows less red),  demonstrating  the SES forecast using a higher alpha constant more closely mirrors it.  
 
-```{r}
+
+```{r, eval=FALSE, include=FALSE}
+par(mfrow = c(1,2))
 nValid <- 36
 nTrain <- length(ridership.ts) - nValid
 train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
 valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
 #trailing moving average of training period
-ma.trailing <- rollmean(train.ts, k = 3, align = "right")
+ma.trailing <- rollmean(train.ts, k = 2, align = "right")
 forecast.ma.trailing <-forecast(ma.trailing, h = nValid, level = 0)
+
 ses.ridership <- ets(train.ts, model = "ZZZ", alpha = .98)
 ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
 yrange <- range(ridership.ts)
-plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n")
-lines(ridership.ts, bty = "l")
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.98")
+lines(ridership.ts, bty = "l", col = "white")
 axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
 #y axis to format without calculations. las = 2 function is so label is perpendicular to axis
-axis(2, at = seq(1000, 3000, 100), labels = format(seq(1000, 3000, 100)), las = 2)
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
 lines(forecast.ma.trailing$fitted , col = "blue"
       #, lty = 2
       )
 lines(ses.pred$fitted, col = "red", lty = 3)
-legend(1999, 1600, c("ridership", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 3), col = c("black", "blue", "red"), bty = "n")
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 3), col = c("white", "blue", "red"), bty = "n")
+
+
+
+ses.ridershipsmallAlpha <- ets(train.ts, model = "ZZZ", alpha = .02)
+ses.predSmallAlpha <- forecast(ses.ridershipsmallAlpha, h = nValid, level = 0)
+yrange <- range(ridership.ts)
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.02")
+lines(ridership.ts, bty = "l", col = "white")
+axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "blue"
+      #, lty = 2
+      )
+lines(ses.predSmallAlpha$fitted, col = "red", lty = 3)
+# lines(ses.predSmallAlpha$mean, col = "red", lty = 2)
+# lines(ses.pred$mean, col = "blue", lty = 3)
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.02"), lty = c(1, 1, 3), col = c("white", "blue", "red"), bty = "n")
+
 ```
+
+```{r}
+
+nValid <- 12
+nTrain <- length(ridership.ts) - nValid
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+ma.trailing <- rollmean(train.ts, k = 2, align = "right")
+forecast.ma.trailing <-forecast(ma.trailing, h = nValid, level = 0)
+
+ses.ridership <- ets(train.ts, model = "ZZZ", alpha = .98)
+ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
+ses.ridershipsmallAlpha <- ets(train.ts, model = "ZZZ", alpha = .02)
+ses.predSmallAlpha <- forecast(ses.ridershipsmallAlpha, h = nValid, level = 0)
+
+par(mfrow = c(1,2))
+
+yrange <- range(ridership.ts)
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.98")
+axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "red")
+lines(ses.pred$fitted, col = "blue")
+#lines(ses.predSmallAlpha$fitted, col = "green")
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 1), col = c("white","red", "blue"), bty = "n")
+
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.02")
+axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "red")
+#lines(ses.pred$fitted, col = "yellow")
+lines(ses.predSmallAlpha$fitted, col = "blue")
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.02"), lty = c(1, 1, 1), col = c("white", "red", "blue"), bty = "n")
+
+```
+
+
 
 ##5. 
 **Forecasting Department Store Sales**
@@ -89,9 +150,9 @@ sales.quad <- forecast(DeptSales.quad, h = nValid, level = 0)
 DeptSales.Poly <- tslm(DeptSales.ts ~ poly(trend,2))
 yrange <- range(DeptSales.ts)
 
-plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
 
-axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
 lines(lines(DeptSales.ts, bty = "l", lwd = 2))
 lines(DeptSales.Linear$fitted , col = "blue", lwd = 2)
@@ -109,7 +170,7 @@ The second order polynomial trend line mirrors the aggregated data.
 SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
 YRange <- range(SalesYearly)
 plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
-axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)))
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(0, 500000, 10000), labels = format(seq(0, 500, 10)), las = 2)
 lines(SalesYearly, bty = "l", lwd = 2, lty = 1)
 YrSales.Linear <- tslm(SalesYearly ~ trend)
@@ -130,7 +191,7 @@ colors <- c("violet", "red", "green", "blue")
 #colors <- terrain.colors(4, alpha = 1) 
 linetype <- c(1,1,1,1) 
 plotchar <- c(1:4)
-axis(1, at=seq(1,4,1), labels=format(seq(1,4,1)))
+axis(1, at=seq(1,6,1), labels=format(seq(1,6,1)))
 for (i in 1:4) { 
   currentQu <- subset(DeptSales.ts/1000, cycle(DeptSales.ts/1000)==i)
   lines(seq(1, 1 +length(currentQu)-1,1), currentQu, type="b", lwd=1,
@@ -171,11 +232,13 @@ theme(title = bold.italic, axis.title = bold.italic) +
 
 5a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
 
-* **Moving average of raw series:** This is not a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not not accomodate trend or seasonality, 2 components in this data series.  
+* **Moving average of raw series:** This is **not** a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not accomodate trend or seasonality, 2 components in this data series.  
 
-* **Moving average of deseasonalized series:** Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonality component and perhaps a trend component. Deseasonalizing the series is essential when forecasting with this method. Deseasonalized data may well be adquate for forecasting with the moving average because there is evidence to support the lack of an impactful trend component. Because we can not conclude a lack of trend with certainty, trial and error is required. If there is no trend, data that is deseasonalized with differencing can be used to forecast with a moving average. Deseasonalizing quarterly data uses a lag of 4. 
+* **Moving average of deseasonalized series:** This method is suitable for forecasting the Dept. Store Sales series. 
 
-Below are plots of the actual Dept Store Sales, the deseasonalized series, the detrended series, and the deseasonalized, detrended series. 
+Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonal component; a trend component is less clear. Deseasonalizing the series is essential when forecasting with this method. In order to decide if this particular data series needs detrending in addition to deseasonalizing with differencing, we need to look at how well each performs against the actual sales. 
+
+Below are plots of the actual Dept Store Sales, the deseasonalized series, the detrended series, and the deseasonalized and detrended series. 
 
 ```{r}
 #deseasonalized Dept Store Sales with lag 4 differencing
@@ -218,6 +281,86 @@ doubleDiff <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
 plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
 
 
+```
+
+
+
+```{r MA of Deseasonalized}
+
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MAwithSeason <- rollmean(diff(salesTrain, lag = 4), k = 4, align = "right")
+MASeasForecast <- forecast(MAwithSeason, h = validLength)
+
+
+realForecasts <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecasts[i] <- MASeasForecast$mean [i]  + salesTrain[(trainLength+i)-validLength] 
+    #+ (salesTrain[trainLength] - salesTrain[trainLength - validLength])
+  } else{
+    realForecasts[i] <- MASeasForecast$mean[i] + salesTrain[(trainLength+i)-validLength] 
+    #+ (realForecasts[i-1] - salesTrain[trainLength+i-1-validLength])
+  }
+}
+#actual MA forecast
+#realForecasts
+
+
+# yrange <- range(DeptSales.ts)
+# plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+# 
+# axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+# axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+# lines(lines(DeptSales.ts, bty = "l", lwd = 2))
+# #lines(seq(5, at = seq(6-1/validLength, 1/validLength, realForecasts, col = "blue" , lwd = 2, lty = 2 )))
+# 
+# lines(seq(6, 7-1/validLength, 1/validLength), realForecasts, col="red", lwd=2, lty=2)
+
+```
+
+The plot below shows the two different forecasts against the actual series. The deseasonalized moving average forcast has a lower MAPE score than the double difference moving average forecast. 
+
+```{r Deseasonalized and Detrended, echo=FALSE}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MAwithSeasonTrend <- rollmean(diff(diff(salesTrain, lag = 4), lag = 1), k = 4, align = "right")
+MASeasTrForecast <- forecast(MAwithSeasonTrend, h = validLength)
+#MASeasTrForecast
+
+realForecasts1 <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecasts1[i] <- MASeasTrForecast$mean [i]  + salesTrain[(trainLength+i)-validLength] + (salesTrain[trainLength] - salesTrain[trainLength - validLength])
+  } else{
+    realForecasts1[i] <- MASeasTrForecast$mean[i] + salesTrain[(trainLength+i)-validLength] + (realForecasts1[i-1] - salesTrain[trainLength+i-1-validLength])
+  }
+}
+#actual MA forecast
+# realForecasts1
+# realForecasts
+
+
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual and Moving Average Forecasts")
+
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(lines(DeptSales.ts, bty = "l", lwd = 2))
+#lines(seq(5, at = seq(6-1/validLength, 1/validLength, realForecasts, col = "blue" , lwd = 2, lty = 2 )))
+lines(seq(6, 7-1/validLength, 1/validLength), realForecasts, col="red", lwd=2, lty=2)
+lines(seq(6, 7-1/validLength, 1/validLength), realForecasts1, col="blue", lwd=2, lty=3)
+
+
+
+
+legend(1, 100000, c("Actual Sales", "De-Seasonalized, MAPE = 2.38916", "Double Differenced, MAPE = 3.908718"), lty = c(1,2,3), col = c("black", "red", "blue"), lwd = c(2,2,2),  bty = "n")
 ```
 
 
@@ -294,4 +437,30 @@ summary(DeptSales.Linear)
 summary(DeptSales.Poly)
 ```
 
+Point Forecast Deseasonalized Moving Average
+
+```{r}
+MASeasForecast
+```
+
+
+Accuracy of Deseasonalized Moving Average Forecast for Dept. Store Sales
+
+```{r}
+accuracy(realForecasts, salesValid)
+
+```
+
+Point Forecast Deseasonalized and Detrended Moving Average
+
+```{r}
+MASeasTrForecast
+```
+
+
+Accuracy of Deseasonalized and Detrended Moving Average Forecast for Dept. Store Sales
+
+```{r}
+accuracy(realForecasts1, salesValid)
+```
 
