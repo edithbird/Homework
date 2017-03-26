@@ -101,10 +101,10 @@ salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
 salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
 #linear trend line
 DeptSales.Linear <- tslm(DeptSales.ts ~ trend)
-sales.lm.pred <- forecast(DeptSales.Linear, h = nValid, level = 0)
+sales.lm.pred <- forecast(DeptSales.Linear, h = validLength, level = 0)
 #quadratic trend line
 DeptSales.quad <- tslm(DeptSales.ts ~ trend + I(trend^2))
-sales.quad <- forecast(DeptSales.quad, h = nValid, level = 0)
+sales.quad <- forecast(DeptSales.quad, h = validLength, level = 0)
 DeptSales.Poly <- tslm(DeptSales.ts ~ poly(trend,2))
 yrange <- range(DeptSales.ts)
 
@@ -187,13 +187,40 @@ theme(title = bold.italic, axis.title = bold.italic) +
 ```
 
 
-5a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
+###**5a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.**
 
-* **Moving average of raw series:** This is **not** a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not accomodate trend or seasonality, 2 components in this data series.  
+###* Moving average of raw series: 
 
-* **Moving average of deseasonalized series:** This method is suitable for forecasting the Dept. Store Sales series. 
+This is **not** a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not accomodate trend or seasonality, 2 components in this data series.  
 
-Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonal component; a trend component is less clear. Deseasonalizing the series is essential when forecasting with this method. In order to decide if this particular data series needs detrending in addition to deseasonalizing with differencing, we need to look at how well each performs against the actual sales. 
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MASales <- rollapply(salesTrain, 2, mean)
+MASales[2]
+MAFCSales <- forecast(MASales, h = validLength)
+summary(MASales)
+accuracy(MAFCSales,salesValid)
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales and Moving Average")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
+lines(DeptSales.ts)
+lines(MASales$fitted, lwd = 2, col = "blue") 
+lines(MAFCSales$mean, lwd = 2, lty = 2, col = "blue")
+legend(1, 100000, c("Actual Sales", "Moving Average \nMAPE = 15.67145"), lty = c(1,2), col = c("black","blue"), lwd = c(2,2),  bty = "n")
+
+
+
+
+```
+
+
+###* Moving average of deseasonalized series: 
+
+This method is suitable for forecasting the Dept. Store Sales series. Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonal component; a trend component is less clear. Deseasonalizing the series is essential when forecasting with this method. In order to decide if this particular data series needs detrending in addition to deseasonalizing with differencing, we need to look at how well each performs against the actual sales. 
 
 
 ```{r, include=FALSE}
@@ -331,7 +358,9 @@ legend(1, 100000, c("Actual Sales", "De-Seasonalized, MAPE = 2.38916", "Double D
 ```
 
 
-* **Simple exponential smoothing of the raw series:** SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a decent model. 
+###* Simple exponential smoothing of the raw series: 
+
+SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a decent model. 
 
 
 To illustrate that the **raw Dept Store Sales data** is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model (no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
@@ -357,7 +386,7 @@ SESRaw1 <- ets(salesTrain, model = "ZZZ")
 summary(SESRaw1)
 ```
 
-Even if we Deseasonalize the Dept Store Sales data with differencing and run SES "ANN", the MAPE is worse than many we have seen. The plot below shows the actual series with the SES forecats using raw and deseasonalized data. 
+To use SES for the Dept Store Sales data, the series would have to be deseasonalized. Even if we deseasonalize the Dept Store Sales data with differencing and run SES "ANN", the MAPE is worse than many we have seen. The plot below shows the actual series with the SES forecats using raw and deseasonalized data. 
 
 ```{r}
 #Deseasonalize dept store sales 
@@ -397,13 +426,15 @@ legend(1, 100000, c("Actual Sales", "SES lag-4, MAPE = 8.02", "SES Raw Data, MAP
 ```
 
 
-* **Double exponential smoothing of the raw series:** Also known as Holt's Linear Trend Model, Double Exponential Smoothing is not a suitable method to forecat the Dept Store Sales data. Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend; the function identifies "MNM" as the best model. Therefore double exponential smoothing would not be optimal model for this series, it is for errors following "AMN" or "MMN". If we run the series through the "MMN" model, we get a forecast with a higher MAPE. 
+###* Double exponential smoothing of the raw series: 
+
+Also known as Holt's Linear Trend Model, Double Exponential Smoothing is not a suitable method to forecat the Dept Store Sales data. Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend; the function identifies "MNM" as the best model. Therefore double exponential smoothing would not be optimal model for the raw data series, it is for errors following "AMN" or "MMN". If we run the series through the "MMN" (no seasonality) model, we get a forecast with a higher MAPE. 
 
 
 ```{r}
 yrange <- range(DeptSales.ts)
 hSales <- ets(salesTrain, model = "MMN") 
-hSales.pred <- forecast(hSales, h = nValid, level = 0)
+hSales.pred <- forecast(hSales, h = validLength, level = 0)
 plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales and Holt Linear Trend Model")
 axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
@@ -414,9 +445,31 @@ legend(1, 100000, c("Actual Sales", "Holt's Linear Model 'MMN' \nMAPE = 15.67145
 ```
 
 
+
+
+###* Holt-Winter's exponential smoothing of the raw  series: 
+
+The **Holt Winter's** method is suitable for the Dept Store Sales data because it accomodates data that has trend and/or seasonality. 
+
 An extension of double exponential smoothing called the  **Holt Winter's** model is appropriate for a data series that has both trend and seasonality components.
 
-* **Holt-Winter's exponential smoothing of the raw  series:**
+```{r}
+hwinSales <- ets(salesTrain, model = "MNM")
+summary(hwinSales)
+hwSalesforecast <- forecast(hwinSales, h = validLength)
+accuracy(hwSalesforecast, salesValid)
+hwinSales$par
+
+yrange <- range(DeptSales.ts +1)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales and Holt Winter's Forecast")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
+lines(DeptSales.ts)
+lines(hwinSales$fitted, lwd = 2, col = "blue") 
+lines(hwSalesforecast$mean, lwd = 2, lty = 2, col = "blue")
+legend(1, 100000, c("Actual Sales", "HW fit MAPE = 2.12", "HW Forecast MAPE = 7.02"), lty = c(1,1,2), col = c("black","blue", "blue"), lwd = c(2,2,2),  bty = "n")
+```
+
 
 5b. A forecaster was tasked to generate forecasts for 4 quarters ahead. She therefore partitioned the data so that the last 4 quarters were designated as the validation period. The forecaster approached the forecasting task by using multiplicative Holt-Winter's exponential smoothing. Specifically, you should call the ets function with the parameters restrict=FALSE, model = "ZZZ" and use the smoothing constants of $\alpha=0.2$ $\alpha=0.2$, $=\beta=0.15$ $\beta=0.15$, and $\lambda=0.05$ $\lambda=0.05$.
 
