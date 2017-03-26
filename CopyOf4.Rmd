@@ -195,9 +195,8 @@ theme(title = bold.italic, axis.title = bold.italic) +
 
 Moving average forecasting is for data that demonstrates stationarity, it should not have trend or seasonality. The six year series of department store quarterly sales has a seasonal component; a trend component is less clear. Deseasonalizing the series is essential when forecasting with this method. In order to decide if this particular data series needs detrending in addition to deseasonalizing with differencing, we need to look at how well each performs against the actual sales. 
 
-Below are plots of the actual Dept Store Sales, the deseasonalized series, the detrended series, and the deseasonalized and detrended series. 
 
-```{r}
+```{r, include=FALSE}
 #deseasonalized Dept Store Sales with lag 4 differencing
 lag4diff <- diff(DeptSales.ts, lag=4)
 #deseasonalized and deterended Dept.store data
@@ -229,14 +228,25 @@ plot(lag4diff,  ylab="Lag-4", xlab="Year", bty="l", main="B. Lag-4 Differencing 
 #lag-1 differencing for detrending
 lag1diff <- diff(DeptSales.ts, lag=1)
 
+
 #plot the lag-1 difference for detrending
 plot(lag1diff,  ylab="Lag-1", xlab="Year", bty="l", main="C. Lag-1 Differencing \nDe-trended")
 
-#double differenced
-doubleDiff <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+doubleDiff <- diff(diff(DeptSales.ts, lag = 1), lag = 4)
 #plot double differenced
-plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+plot(doubleDiff,  ylab="Lag-1, then Lag-4", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+#double differenced
 
+# par(mfrow = c(1,2))
+# #double differenced
+# doubleDiff <- diff(diff(DeptSales.ts, lag = 1), lag = 4)
+# #plot double differenced
+# plot(doubleDiff,  ylab="Lag-1, then Lag-4", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+# #double differenced
+# doubleDiff1 <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+# #plot double differenced
+# plot(doubleDiff1,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+# 
 
 ```
 
@@ -309,7 +319,7 @@ plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousa
 
 axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
-lines(lines(DeptSales.ts, bty = "l", lwd = 2))
+lines(DeptSales.ts, bty = "l", lwd = 2)
 #lines(seq(5, at = seq(6-1/validLength, 1/validLength, realForecasts, col = "blue" , lwd = 2, lty = 2 )))
 lines(seq(6, 7-1/validLength, 1/validLength), realForecasts, col="red", lwd=2, lty=2)
 lines(seq(6, 7-1/validLength, 1/validLength), realForecasts1, col="blue", lwd=2, lty=3)
@@ -324,7 +334,7 @@ legend(1, 100000, c("Actual Sales", "De-Seasonalized, MAPE = 2.38916", "Double D
 * **Simple exponential smoothing of the raw series:** SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a good model. 
 
 
-To illustrate that the raw Dept Store Sales data is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model(no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
+To illustrate that the **raw Dept Store Sales data** is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model(no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
 
 ```{r}
 validLength <- 4
@@ -333,18 +343,62 @@ salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
 salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
 yrange <- range(DeptSales.ts)
 RawData <- ets(salesTrain, model = "ANN")
+RawForecast <- forecast(RawData, h = validLength)
 summary(RawData)
 
 # SESraw <- ets(salesTrain, model = "ANN")
 # summary(SESRaw)
 ```
 
-If we let the ets() decide which model and which $\alpha$ value work best for the Dept Store Sales data, it outputs that a forecasting model that recognizes multiplicative seasonality and no trend gives a better MAPE. 
+If we let the ets() decide which model and which $\alpha$ value work best for the Dept Store Sales data, it outputs a forecasting model that recognizes multiplicative seasonality and no trend; it also renders a  better MAPE. 
 
 ```{r}
 SESRaw1 <- ets(salesTrain, model = "ZZZ")
 summary(SESRaw1)
 ```
+
+**This is lag-4 differenced data with the SES model "ZZZ"
+
+```{r}
+#Deseasonalize dept store sales 
+
+# SESwithSeason <- ets(diff(salesTrain, lag = 4), k = 4, align = "right")
+# MASeasForecast <- forecast(MAwithSeason, h = validLength)
+
+SESDiffSales <- ets(diff(train.ts, lag = 4), model = "ZZZ")
+
+SESDiffSalesForecast <- forecast(SESDiffSales, h = validLength, level = 0)
+
+
+realForecastsSES <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecastsSES[i] <- SESDiffSalesForecast$mean [i]  + salesTrain[(trainLength+i)-validLength] 
+    #+ (salesTrain[trainLength] - salesTrain[trainLength - validLength])
+  } else{
+    realForecastsSES[i] <- SESDiffSalesForecast$mean[i] + salesTrain[(trainLength+i)-validLength] 
+    #+ (realForecastsSES[i-1] - salesTrain[trainLength+i-1-validLength])
+  }
+}
+
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual and Moving Average Forecasts")
+
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+#lines(seq(5, at = seq(6-1/validLength, 1/validLength, realForecastsSES, col = "blue" , lwd = 2, lty = 2 )))
+lines(DeptSales.ts, lwd = 2)
+lines(seq(6, 7-1/validLength, 1/validLength), realForecastsSES, col="red", lwd=2, lty=2)
+lines(RawForecast$mean, col = "blue", lty = 2, lwd = 2)
+
+
+
+
+legend(1, 100000, c("Actual Sales", "SES on De-Seasonalized, MAPE = 7.746299", "SES Raw Data, MAPE = 15.28388"), lty = c(1,2, 2), col = c("black", "red", "blue"), lwd = c(2,2, 2),  bty = "n")
+
+```
+
 
 * **Double exponential smoothing of the raw series:** Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend "MNM". Therefore double exponential smoothing would not be the optimal model for this series. 
 
@@ -370,11 +424,51 @@ ii. Using the forecasts for the validation set that you came up with in i. above
   
 5d. Another analyst decided to take a much simpler approach, and instead of using exponential smoothing he used differencing. 
 
-  *Use differencing to remove the trend and seasonal pattern. Which order works better: first removing trend and then seasonality or the opposite order? 
+**Use differencing to remove the trend and seasonal pattern. Which order works better: first removing trend and then seasonality or the opposite order?** 
 
-  *Show the progression of time plots as you difference the data and each final series to provide evidence in support of your answer.
+There is no difference.
+
+```{r, echo=TRUE}
+par(mfrow = c(1,2))
+#double differenced
+doubleDiff <- diff(diff(DeptSales.ts, lag = 1), lag = 4)
+#plot double differenced
+plot(doubleDiff,  ylab="Lag-1, then Lag-4", xlab="Year", bty="l", main="Dept Sales Twice-Differenced \nDe-Trended \nDe-Seasonalized")
+#double differenced
+doubleDiff1 <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+#plot double differenced
+plot(doubleDiff1,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+```
+
+**Show the progression of time plots as you difference the data and each final series to provide evidence in support of your answer.** 
+
+```{r}
+
+#set up a plot with 2 rows and 2 columns
+par(mfrow = c(2,2))
+#plot the original
+plot(DeptSales.ts, ylab = "Dept Store Sales", xlab = "Year", bty = "l", main = "A. Dept Store Sales")
+#lag 4 differencing
+lag4diff <- diff(DeptSales.ts, lag=4)
+#plot the lag-4 difference
+plot(lag4diff,  ylab="Lag-4", xlab="Year", bty="l", main="B. Lag-4 Differencing \nDe-Seasonalized")
+#lag-1 differencing for detrending
+lag1diff <- diff(DeptSales.ts, lag=1)
+
+
+#plot the lag-1 difference for detrending
+plot(lag1diff,  ylab="Lag-1", xlab="Year", bty="l", main="C. Lag-1 Differencing \nDe-trended")
+doubleDiff <- diff(diff(DeptSales.ts, lag = 4), lag = 1)
+#plot double differenced
+plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept Sales Twice-Differenced \nDe-Seasonalized \nDe-Trended")
+#double differenced
+```
+  
+  
   
 5e. Forecast quarters 21-22 using the average of the double-differenced series from (d). Remember to use only the training period (until quarter 20), and to adjust back for the trend and seasonal pattern.
+
+
 
 5f. Compare the forecasts from (e) to the exponential smoothing forecasts found in (b). Which of the two forecasting methods would you choose? Explain.
 
@@ -448,5 +542,17 @@ Accuracy of Deseasonalized and Detrended Moving Average Forecast for Dept. Store
 
 ```{r}
 accuracy(realForecasts1, salesValid)
+```
+
+Accuracy of Deseasonalized SES Forecast for Dept Store Sales data 
+
+```{r}
+accuracy(realForecastsSES, salesValid)
+```
+
+Accuracy of raw data used in SES 
+
+```{r}
+accuracy(RawForecast, salesValid)
 ```
 
