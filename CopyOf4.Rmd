@@ -331,10 +331,10 @@ legend(1, 100000, c("Actual Sales", "De-Seasonalized, MAPE = 2.38916", "Double D
 ```
 
 
-* **Simple exponential smoothing of the raw series:** SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a good model. 
+* **Simple exponential smoothing of the raw series:** SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a decent model. 
 
 
-To illustrate that the **raw Dept Store Sales data** is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model(no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
+To illustrate that the **raw Dept Store Sales data** is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model (no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
 
 ```{r}
 validLength <- 4
@@ -350,14 +350,14 @@ summary(RawData)
 # summary(SESRaw)
 ```
 
-If we let the ets() decide which model and which $\alpha$ value work best for the Dept Store Sales data, it outputs a forecasting model that recognizes multiplicative seasonality and no trend; it also renders a  better MAPE. 
+If we let the ets() decide which model and which $\alpha$ value work best for the Dept Store Sales data, it chooses a forecasting model that recognizes multiplicative seasonality and no trend; it also renders a  better MAPE. Since an SES requires a model = "ANN", we can conclude the raw series is not suitable. 
 
 ```{r}
 SESRaw1 <- ets(salesTrain, model = "ZZZ")
 summary(SESRaw1)
 ```
 
-**This is lag-4 differenced data with the SES model "ZZZ"
+Even if we Deseasonalize the Dept Store Sales data with differencing and run SES "ANN", the MAPE is worse than many we have seen. The plot below shows the actual series with the SES forecats using raw and deseasonalized data. 
 
 ```{r}
 #Deseasonalize dept store sales 
@@ -365,7 +365,7 @@ summary(SESRaw1)
 # SESwithSeason <- ets(diff(salesTrain, lag = 4), k = 4, align = "right")
 # MASeasForecast <- forecast(MAwithSeason, h = validLength)
 
-SESDiffSales <- ets(diff(train.ts, lag = 4), model = "ZZZ")
+SESDiffSales <- ets(diff(train.ts, lag = 4), model = "ANN")
 
 SESDiffSalesForecast <- forecast(SESDiffSales, h = validLength, level = 0)
 
@@ -383,7 +383,7 @@ for (i in 1:validLength){
 }
 
 yrange <- range(DeptSales.ts)
-plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual and Moving Average Forecasts")
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual Sales and SES Forecast")
 
 axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
@@ -392,19 +392,25 @@ lines(DeptSales.ts, lwd = 2)
 lines(seq(6, 7-1/validLength, 1/validLength), realForecastsSES, col="red", lwd=2, lty=2)
 lines(RawForecast$mean, col = "blue", lty = 2, lwd = 2)
 
-
-
-
-legend(1, 100000, c("Actual Sales", "SES on De-Seasonalized, MAPE = 7.746299", "SES Raw Data, MAPE = 15.28388"), lty = c(1,2, 2), col = c("black", "red", "blue"), lwd = c(2,2, 2),  bty = "n")
+legend(1, 100000, c("Actual Sales", "SES lag-4, MAPE = 8.02", "SES Raw Data, MAPE = 15.28"), lty = c(1,2, 2), col = c("black", "red", "blue"), lwd = c(2,2, 2),  bty = "n")
 
 ```
 
 
-* **Double exponential smoothing of the raw series:** Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend "MNM". Therefore double exponential smoothing would not be the optimal model for this series. 
+* **Double exponential smoothing of the raw series:** Also known as Holt's Linear Trend Model, Double Exponential Smoothing is not a suitable method to forecat the Dept Store Sales data. Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend; the function identifies "MNM" as the best model. Therefore double exponential smoothing would not be optimal model for this series, it is for errors following "AMN" or "MMN". If we run the series through the "MMN" model, we get a forecast with a higher MAPE. 
+
 
 ```{r}
-#DES <- ets()
-
+yrange <- range(DeptSales.ts)
+hSales <- ets(salesTrain, model = "MMN") 
+hSales.pred <- forecast(hSales, h = nValid, level = 0)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales and Holt Linear Trend Model")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
+lines(DeptSales.ts)
+#lines(hSales.pred$fitted, lwd = 2, col = "blue") 
+lines(hSales.pred$mean, lwd = 2, lty = 2, col = "blue")
+legend(1, 100000, c("Actual Sales", "Holt's Linear Model 'MMN' \nMAPE = 15.67145"), lty = c(1,2), col = c("black","blue"), lwd = c(2,2),  bty = "n")
 ```
 
 
@@ -502,7 +508,7 @@ plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept 
 
 
 ###Appendix
-**1.** 
+**Information pertaining to Q. 5** 
 
 Linear Trend Summary
 ```{r}
@@ -516,6 +522,8 @@ summary(DeptSales.Linear)
 ```{r}
 summary(DeptSales.Poly)
 ```
+
+**5a, bullet 2**
 
 Point Forecast Deseasonalized Moving Average
 
@@ -544,15 +552,27 @@ Accuracy of Deseasonalized and Detrended Moving Average Forecast for Dept. Store
 accuracy(realForecasts1, salesValid)
 ```
 
-Accuracy of Deseasonalized SES Forecast for Dept Store Sales data 
+**5a, bullet 3**
+
+Accuracy of Deseasonalized (lag - 4) SES model "ANN" Forecast for Dept Store Sales data,  
 
 ```{r}
 accuracy(realForecastsSES, salesValid)
 ```
 
-Accuracy of raw data used in SES 
+Accuracy of raw data used in SES model "ANN" Forecast for Dept Store Sales data. 
 
 ```{r}
 accuracy(RawForecast, salesValid)
+```
+
+**5a, bullet 4**
+
+Holt's Linear Trend Model, aka, Double Exponential Smoothing is not a suitable model for forecasting the Dept. Store Sales data because the model is not built to recognize seasonality in the data and this particular data set has a multiplicative seasonal component. 
+
+```{r}
+accuracy(hSales.pred, salesValid)
+summary(hSales)
+
 ```
 
