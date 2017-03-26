@@ -65,7 +65,7 @@ par(mfrow = c(1,2))
 
 yrange <- range(ridership.ts)
 plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.98")
-axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+axis(1, at = seq(1991, 2004,2), labels = format(seq(1991, 2004, 2)))
 #y axis to format without calculations. las = 2 function is so label is perpendicular to axis
 axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
 lines(forecast.ma.trailing$fitted , col = "red")
@@ -74,7 +74,7 @@ lines(ses.pred$fitted, col = "blue")
 legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 1), col = c("white","red", "blue"), bty = "n")
 
 plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.02")
-axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
+axis(1, at = seq(1991, 2004, 2), labels = format(seq(1991, 2004, 2)))
 #y axis to format without calculations. las = 2 function is so label is perpendicular to axis
 axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
 lines(forecast.ma.trailing$fitted , col = "red")
@@ -91,7 +91,8 @@ legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.02"), lty = 
 
 The best forecasting model can only be determined by considering the components of the Department Store Sales data series, namely error, level, trend, and seasonality. While all series have error and level, not all have the latter 2 components. The first step in settling on the best models is to evaluate the series for trend and seasonality. 
 
-**Trend in 6 years of quarterly sales data**
+**Trend**
+
 
 ```{r}
 validLength <- 4
@@ -107,7 +108,7 @@ sales.quad <- forecast(DeptSales.quad, h = nValid, level = 0)
 DeptSales.Poly <- tslm(DeptSales.ts ~ poly(trend,2))
 yrange <- range(DeptSales.ts)
 
-plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
 
 axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
@@ -118,6 +119,7 @@ lines(DeptSales.Poly$fitted, col = "red", lwd = 2)
 legend(1, 100000, c("Dept Store Sales", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
 ```
 
+
 **Trend in the same series with the data aggregated annually**
 
 The second order polynomial trend line mirrors the aggregated data. 
@@ -126,7 +128,7 @@ The second order polynomial trend line mirrors the aggregated data.
 # Aggregate by year and plot it
 SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
 YRange <- range(SalesYearly)
-plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2)
+plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nAggregated Data")
 axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(0, 500000, 10000), labels = format(seq(0, 500, 10)), las = 2)
 lines(SalesYearly, bty = "l", lwd = 2, lty = 1)
@@ -137,7 +139,7 @@ lines(YrSales.Poly$fitted, col = "Red", lwd = 2, lty = 3)
 legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,3), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
 ```
 
-Looking at how each quarter behaves over time, we see an obvious upward trend in each. The dramatic quarterly fluctuations in sales during each year makes it essential that an appropriate model is used to forecast this data series.
+Looking at how each quarter behaves over time, there appears to be an trend in each plot. The R-sq, for the trend lines are about 0.30 making the presence of this component ambiguous. Below is another plot where each line represents a quarter. Each quarter and each year shows growth which indicates some trend, perhaps weak, to the Department Store Sales series. However without firm proof of trend, when evaluating for a forecast model, I would test various ones with and without adjusting for trend when necessary. 
 
 ```{r}
 par(oma = c(0, 0, 0, 2))
@@ -158,11 +160,9 @@ title("Sales Broken Out by Quarter")
 legend(6, 90, 1:4, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Quarter", xpd=NA)
 ```
 
-Based on the visualizations above, I would conclude there is some trend, perhaps weak, to the Department Store Sales series. In evaluating for a forecast model, I would test various ones with and without adjusting for trend when necessary. 
-
 **Seasonality**
 
-There is indisputably a seasonal component to the Dept. Store Sales series. Quarters behave the same throughout the year. 
+There is indisputably a seasonal component to the Dept. Store Sales series. Quarters behave the same throughout the year. The dramatic quarterly fluctuations in sales during each year makes it essential that an appropriate model is used to forecast this data series.
 
 ```{r}
 bold.text <- element_text(face = "bold", color = "black", size = 10)
@@ -321,9 +321,38 @@ legend(1, 100000, c("Actual Sales", "De-Seasonalized, MAPE = 2.38916", "Double D
 ```
 
 
-* **Simple exponential smoothing of the raw series:** Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. Therefore applying the forecasting method on the raw data series would not be suitable for this task. However, if the data series has been detrended and deseasonalized with double differencing, simple exponential smoothing may be a good model. Below is a table showing the optimal alpha and the appropriate model, 0.9672 and "MNM" respectively and graph showing the ets forecast and fit. 
+* **Simple exponential smoothing of the raw series:** SES of the Dept Store Sales' raw data is not an appropriate forecasting method.  Simple Exponential Smoothing, like Moving Average, is for forecasting time series that have no trend or seasonality. However, if the data series is deseasonalized with differencing (lag-4), simple exponential smoothing may be a good model. 
 
-* **Double exponential smoothing of the raw series:** Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learned when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend "MNM". Therefore double exponential smoothing would not be the optimal model for this series. 
+
+To illustrate that the raw Dept Store Sales data is not adequate for simple exponentoal smoothing, we can run the **ets()** function specifing the "ANN" model(no trend, no seasonality) and let the model determine the optimal alpha value. The MAPE = 15.54219, far lower than other models we have tested. 
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+yrange <- range(DeptSales.ts)
+RawData <- ets(salesTrain, model = "ANN")
+summary(RawData)
+
+# SESraw <- ets(salesTrain, model = "ANN")
+# summary(SESRaw)
+```
+
+If we let the ets() decide which model and which $\alpha$ value work best for the Dept Store Sales data, it outputs that a forecasting model that recognizes multiplicative seasonality and no trend gives a better MAPE. 
+
+```{r}
+SESRaw1 <- ets(salesTrain, model = "ZZZ")
+summary(SESRaw1)
+```
+
+* **Double exponential smoothing of the raw series:** Strictly, double exponential smoothing is used to forecast data that has a trend component. As we learn when running the ets() function, the Dept Store Sales data has multiplicative seasonality and no significant trend "MNM". Therefore double exponential smoothing would not be the optimal model for this series. 
+
+```{r}
+#DES <- ets()
+
+```
+
 
 An extension of double exponential smoothing called the  **Holt Winter's** model is appropriate for a data series that has both trend and seasonality components.
 
