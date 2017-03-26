@@ -158,8 +158,11 @@ sesAirBigAlpha <- ets(airTrain, model = "ANN", alpha = 0.8)
 sesAirBigAlpha
 #plot
 yrange = range(air.ts)
+yrange[1]
 #Set up plot
-plot(c(1990, 2001), c(yrange[1], yrange[2] + 5000000), type = "n", xlab = "Year", ylab = "ARPM (in millions)", bty = "l", xaxt = "n", yaxt = "n")
+plot(c(1990, 2001), yrange,
+     # c(yrange[1], yrange[2] + 5000000),
+     type = "n", xlab = "Year", ylab = "ARPM (in millions)", bty = "l", xaxt = "n", yaxt = "n")
 #add training set
 lines(air.ts, bty = "l")
 #add x axis
@@ -237,6 +240,11 @@ plot(lag1and12)
 ###Calculating the point forecast 
 
 ```{r}
+
+Diff1 <- diff(diff(airTrain, lag = 1), lag = 12)
+Diff2 <- diff(diff(airTrain, lag = 12), lag = 1)  
+head(Diff1)
+head(Diff2)
 #mean forecast
 meanForecast <- meanf(diff(diff(airTrain, lag = 1), lag = 12), h = 12)
 #Moving Average
