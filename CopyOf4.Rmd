@@ -46,49 +46,6 @@ In order to get an equivalent result for a moving average with a short window sp
 The pair of plots below show the trailing moving average with a window of 2 in red. The blue line in each represents the simple exponential forecast with a very high and a very low $\alpha$ value respectively. The SES forecast is superimposed on the MA forecast. The plot on the left betrays less of the MA forecast (shows less red),  demonstrating  the SES forecast using a higher alpha constant more closely mirrors it.  
 
 
-```{r, eval=FALSE, include=FALSE}
-par(mfrow = c(1,2))
-nValid <- 36
-nTrain <- length(ridership.ts) - nValid
-train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
-valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
-#trailing moving average of training period
-ma.trailing <- rollmean(train.ts, k = 2, align = "right")
-forecast.ma.trailing <-forecast(ma.trailing, h = nValid, level = 0)
-
-ses.ridership <- ets(train.ts, model = "ZZZ", alpha = .98)
-ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
-yrange <- range(ridership.ts)
-plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.98")
-lines(ridership.ts, bty = "l", col = "white")
-axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
-#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
-axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
-lines(forecast.ma.trailing$fitted , col = "blue"
-      #, lty = 2
-      )
-lines(ses.pred$fitted, col = "red", lty = 3)
-legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 3), col = c("white", "blue", "red"), bty = "n")
-
-
-
-ses.ridershipsmallAlpha <- ets(train.ts, model = "ZZZ", alpha = .02)
-ses.predSmallAlpha <- forecast(ses.ridershipsmallAlpha, h = nValid, level = 0)
-yrange <- range(ridership.ts)
-plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.02")
-lines(ridership.ts, bty = "l", col = "white")
-axis(1, at = seq(1991, 2004,1), labels = format(seq(1991, 2004, 1)))
-#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
-axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
-lines(forecast.ma.trailing$fitted , col = "blue"
-      #, lty = 2
-      )
-lines(ses.predSmallAlpha$fitted, col = "red", lty = 3)
-# lines(ses.predSmallAlpha$mean, col = "red", lty = 2)
-# lines(ses.pred$mean, col = "blue", lty = 3)
-legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.02"), lty = c(1, 1, 3), col = c("white", "blue", "red"), bty = "n")
-
-```
 
 ```{r}
 
