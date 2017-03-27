@@ -1,0 +1,251 @@
+---
+title: "NewAssignment"
+author: "Christine Iyer"
+date: "March 26, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+library(knitr)
+library(forecast)
+library(zoo)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+setwd("/Users/Chris Iyer/Documents/")
+ridership <- read.csv("Amtrak.csv")
+kable(head(ridership))
+##convert data to a time series
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+#read in Dept Store Sales
+DeptSales <- read.csv("DeptStoreSales.csv", header = TRUE, stringsAsFactors = FALSE)
+
+DeptSales$Yr_Qtr <- c("Year 1 Q-1", "Year 1 Q-2", "Year 1 Q-3", "Year 1 Q-4", "Year 2 Q-1", "Year 2 Q-2", "Year 2 Q-3", "Year 2 Q-4", "Year 3 Q-1", "Year 3 Q-2", "Year 3 Q-3", "Year 3 Q-4", "Year 4 Q-1", "Year 4 Q-2", "Year 4 Q-3", "Year 4 Q-4", "Year 5 Q-5", "Year 5 Q-2", "Year 5 Q-3", "Year 5 Q-4", "Year 6 Q-1", "Year 6 Q-2", "Year 6 Q-3", "Year 6 Q-4")
+DeptSales <- DeptSales %>% select(Yr_Qtr, Sales)
+DeptSales
+kable(tail(DeptSales))
+DeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 4)
+QuDeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 1)
+
+```
+
+
+```{r Q plot}
+#range of data in series
+yrange <- range(DeptSales.ts)
+#Generic plot Quarterly labels
+plot(c(1,24), yrange, type = "n", xlab = "Quarter", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
+axis(1, at = seq(1, 24, 1), labels = format(seq(1, 24, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(QuDeptSales.ts, lwd = 2)
+legend(1, 100000, c("Dept Store Sales", "XXXXXXX", "YYYYYY"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+
+```{r Year Plot}
+#range of data in series
+yrange <- range(DeptSales.ts)
+#Generic plot Year labels
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(DeptSales.ts, lwd = 2)
+legend(1, 100000, c("Dept Store Sales", "XXXXXXX", "YYYYYY"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+
+
+```
+
+
+##2. Relationship between Moving Average and Exponential Smoothing: Assume that we apply a moving average to a series, using a very short window span. If we wanted to achieve an equivalent result using simple exponential smoothing, what value should the smoothing constant take?
+
+In order to get an equivalent result for a moving average with a short window span and a simple exponential smoothing forecast, the SES needs an $\alpha$ value that is very close to 1. A high $\alpha$ value translates to a fast learning model meaning the most recent values have the most impact on the forecast and past values are less important.
+
+The pair of plots below show the trailing moving average with a window of 2 in red. The blue line in each represents the simple exponential forecast with a very high and a very low $\alpha$ value respectively. The SES forecast is superimposed on the MA forecast. The plot on the left betrays less of the MA forecast (shows less red), demonstrating the SES forecast using a higher alpha constant more closely mirrors it.
+
+```{r}
+nValid <- 12
+nTrain <- length(ridership.ts) - nValid
+train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain))
+valid.ts <- window(ridership.ts, start = c(1991, nTrain + 1), end = c(1991, nTrain + nValid))
+ma.trailing <- rollmean(train.ts, k = 2, align = "right")
+forecast.ma.trailing <-forecast(ma.trailing, h = nValid, level = 0)
+
+ses.ridership <- ets(train.ts, model = "ZZZ", alpha = .98)
+ses.pred <- forecast(ses.ridership, h = nValid, level = 0)
+ses.ridershipsmallAlpha <- ets(train.ts, model = "ZZZ", alpha = .02)
+ses.predSmallAlpha <- forecast(ses.ridershipsmallAlpha, h = nValid, level = 0)
+
+par(mfrow = c(1,2))
+
+yrange <- range(ridership.ts)
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.98")
+axis(1, at = seq(1991, 2004,2), labels = format(seq(1991, 2004, 2)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "red")
+lines(ses.pred$fitted, col = "blue")
+#lines(ses.predSmallAlpha$fitted, col = "green")
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.98"), lty = c(1, 1, 1), col = c("white","red", "blue"), bty = "n")
+
+plot(c(1991, 2004), yrange, type = "n", xlab = "Year", ylab = "Ridership", bty = "l", xaxt = "n", yaxt = "n", main = "Alpha = 0.02")
+axis(1, at = seq(1991, 2004, 2), labels = format(seq(1991, 2004, 2)))
+#y axis to format without calculations. las = 2 function is so label is perpendicular to axis
+axis(2, at = seq(1000, 3000, 300), labels = format(seq(1000, 3000, 300)), las = 2)
+lines(forecast.ma.trailing$fitted , col = "red")
+#lines(ses.pred$fitted, col = "yellow")
+lines(ses.predSmallAlpha$fitted, col = "blue")
+legend(1991, 2300, c(" ", "trailing moving average", "SES alpha = 0.02"), lty = c(1, 1, 1), col = c("white", "red", "blue"), bty = "n")
+
+```
+
+##5. Forecasting Department Store Sales
+
+The best forecasting model can only be determined by considering the components of the Department Store Sales data series, namely error, level, trend, and seasonality. While all series have error and level, not all have the latter 2 components. The first step in settling on the best models is to evaluate the series for trend and seasonality.
+
+**Trend**
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+#linear trend line
+DeptSales.Linear <- tslm(DeptSales.ts ~ trend)
+sales.lm.pred <- forecast(DeptSales.Linear, h = validLength, level = 0)
+#quadratic trend line
+DeptSales.quad <- tslm(DeptSales.ts ~ trend + I(trend^2))
+sales.quad <- forecast(DeptSales.quad, h = validLength, level = 0)
+DeptSales.Poly <- tslm(DeptSales.ts ~ poly(trend,2))
+yrange <- range(DeptSales.ts)
+
+
+
+
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
+
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(lines(DeptSales.ts, bty = "l", lwd = 2, type = "o"))
+lines(DeptSales.Linear$fitted , col = "blue", lwd = 2)
+#lines(DeptSales.quad$fitted, col = "red", lwd = 2, lty = 1)
+lines(DeptSales.Poly$fitted, col = "red", lwd = 2)
+legend(1, 100000, c("Dept Store Sales", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+**Trend in the same series with the data aggregated annually**
+
+
+```{r}
+# Aggregate by year and plot it
+SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
+YRange <- range(SalesYearly)
+plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nAggregated Data")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(0, 500000, 10000), labels = format(seq(0, 500, 10)), las = 2)
+lines(SalesYearly, bty = "l", lwd = 2, lty = 1)
+YrSales.Linear <- tslm(SalesYearly ~ trend)
+YrSales.Poly <- tslm(SalesYearly ~ poly(trend,2))
+lines(YrSales.Linear$fitted , col = "blue", lty = 1, lwd = 2)
+lines(YrSales.Poly$fitted, col = "Red", lwd = 2, lty = 3)
+legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,3), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+The second order polynomial trend line mirrors the aggregated data.
+
+```{r}
+# Aggregate by year and plot it
+SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
+YRange <- range(SalesYearly)
+plot(c(1,6), YRange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nAggregated Data")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(0, 500000, 10000), labels = format(seq(0, 500, 10)), las = 2)
+lines(SalesYearly, bty = "l", lwd = 2, lty = 1)
+YrSales.Linear <- tslm(SalesYearly ~ trend)
+YrSales.Poly <- tslm(SalesYearly ~ poly(trend,2))
+lines(YrSales.Linear$fitted , col = "blue", lty = 1, lwd = 2)
+lines(YrSales.Poly$fitted, col = "Red", lwd = 2, lty = 3)
+legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054", "2nd Order Poly Trend, R-sq = 0.3398"), lty = c(1,1,3), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+Looking at how each quarter behaves over time, there appears to be an trend in each plot. The R-sq, for the trend lines are about 0.30 making the presence of this component ambiguous. Below is another plot where each line represents a quarter. Each quarter and each year shows growth which indicates some trend, perhaps weak, to the Department Store Sales series. However without firm proof of trend, when evaluating for a forecast model, I would test various ones with and without adjusting for trend when necessary.
+
+```{r}
+par(oma = c(0, 0, 0, 2))
+xrange <- c(1,6)
+yrange <- range(DeptSales.ts/1000)
+plot(xrange, yrange, type="n", xlab="Year", ylab="Quarterly Sales", bty="l", las=1)
+colors <- c("violet", "red", "green", "blue")
+#colors <- terrain.colors(4, alpha = 1) 
+linetype <- c(1,1,1,1) 
+plotchar <- c(1:4)
+axis(1, at=seq(1,6,1), labels=format(seq(1,6,1)))
+for (i in 1:4) { 
+  currentQu <- subset(DeptSales.ts/1000, cycle(DeptSales.ts/1000)==i)
+  lines(seq(1, 1 +length(currentQu)-1,1), currentQu, type="b", lwd=1,
+      lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+} 
+title("Sales Broken Out by Quarter")
+legend(6, 90, 1:4, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Quarter", xpd=NA)
+```
+
+**Seasonality**
+
+There is indisputably a seasonal component to the Dept. Store Sales series. Quarters behave the same throughout the year. The dramatic quarterly fluctuations in sales during each year makes it essential that an appropriate model is used to forecast this data series.
+
+```{r}
+bold.text <- element_text(face = "bold", color = "black", size = 10)
+legendT <- "Legend"
+
+bold.italic <- element_text(face = "bold.italic", color = "black", size = 11)
+ggseasonplot(DeptSales.ts/1000, ylab = "Dept Store Sales (thousands)", xlab = "Quarter",  main = "Seasonal Plot for Dept Store Sales") + 
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank()) + 
+  guides(fill = guide_legend(reverse = TRUE)) +  
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+  
+  ## axis.text.x for x axis only
+theme(axis.text = bold.text) +
+theme(title = bold.italic, axis.title = bold.italic) +
+  geom_line(size = 1) +
+  theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+###5a. Which of the following methods would not be suitable for forecasting this series. Explain why or why not for each one.
+
+###* Moving average of raw series:
+
+This is not a method for forecasting the Dept. Store Sales raw series because, without adjustments to the data, it can not accomodate trend or seasonality, 2 components in this data series.
+
+```{r}
+
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MASales <- rollapply(salesTrain, 2, mean)
+#MASales[2]
+MAFCSales <- forecast(MASales, h = validLength)
+summary(MASales)
+accuracy(MAFCSales,salesValid)
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales and Moving Average")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
+lines(DeptSales.ts)
+
+lines(MASales$fitted, lwd = 2, col = "blue") 
+lines(MAFCSales$mean, lwd = 2, lty = 2, col = "blue")
+legend(1, 100000, c("Actual Sales", "Moving Average \nMAPE = 15.67145"), lty = c(1,2), col = c("black","blue"), lwd = c(2,2),  bty = "n")
+
+```
+
