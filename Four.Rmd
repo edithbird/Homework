@@ -17,34 +17,56 @@ library(dplyr)
 library(ggplot2)
 ```
 
-```{r}
+```{r Ridership windows}
 setwd("/Users/Chris Iyer/Documents/")
 ridership <- read.csv("Amtrak.csv")
 kable(head(ridership))
 ##convert data to a time series
 ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991,1), end = c(2004, 3), frequency = 12)
+timeR <- time(ridership.ts)
+nvalidR <- 12
+ntrainR <- length(ridership.ts) - nvalidR
+trainWindowR <- window(ridership.ts, start = timeR[1], end = timeR[ntrainR])
+validWindowR <- window(ridership.ts, start = timeR[ntrainR +1], end = timeR[ntrainR + nvalidR])
+
+
+```
+
+```{r Dept Sales Windows}
 #read in Dept Store Sales
 DeptSales <- read.csv("DeptStoreSales.csv", header = TRUE, stringsAsFactors = FALSE)
-
+#fix look
 DeptSales$Yr_Qtr <- c("Year 1 Q-1", "Year 1 Q-2", "Year 1 Q-3", "Year 1 Q-4", "Year 2 Q-1", "Year 2 Q-2", "Year 2 Q-3", "Year 2 Q-4", "Year 3 Q-1", "Year 3 Q-2", "Year 3 Q-3", "Year 3 Q-4", "Year 4 Q-1", "Year 4 Q-2", "Year 4 Q-3", "Year 4 Q-4", "Year 5 Q-5", "Year 5 Q-2", "Year 5 Q-3", "Year 5 Q-4", "Year 6 Q-1", "Year 6 Q-2", "Year 6 Q-3", "Year 6 Q-4")
 DeptSales <- DeptSales %>% select(Yr_Qtr, Sales)
 DeptSales
 kable(tail(DeptSales))
-DeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 4)
-QuDeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), frequency = 1)
+DeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), end = c(6,4), frequency = 4)
 
+
+
+timeS <- time(DeptSales.ts)
+nvalidS <- 4
+ntrainS <- length(DeptSales.ts) - nvalidS
+trainWindowDS <- window(DeptSales.ts, start = timeS[1], end = timeS[ntrainS])
+validWindowDS <- window(DeptSales.ts, start = timeS[ntrainS +1], end = timeS[ntrainS + nvalidS])
+
+
+```
+
+```{r}
+QDeptSales.ts <- ts(DeptSales$Sales, start = c(1,1), end = c(6,4), frequency = 1)
 ```
 
 
 ```{r Q plot}
-#range of data in series
-yrange <- range(DeptSales.ts)
-#Generic plot Quarterly labels
-plot(c(1,24), yrange, type = "n", xlab = "Quarter", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
-axis(1, at = seq(1, 24, 1), labels = format(seq(1, 24, 1)))
-axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
-lines(QuDeptSales.ts, lwd = 2)
-legend(1, 100000, c("Dept Store Sales", "XXXXXXX", "YYYYYY"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+# #range of data in series
+# yrange <- range(DeptSales.ts)
+# #Generic plot Quarterly labels
+# plot(c(1,24), yrange, type = "n", xlab = "Quarter", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Trends in Department Store Sales \nQuarterly Data")
+# axis(1, at = seq(1, 24, 1), labels = format(seq(1, 24, 1)))
+# axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+# lines(QuDeptSales.ts, lwd = 2)
+# legend(1, 100000, c("Dept Store Sales", "XXXXXXX", "YYYYYY"), lty = c(1,1,1), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
 ```
 
 
@@ -110,7 +132,7 @@ The best forecasting model can only be determined by considering the components 
 
 **Trend**
 
-```{r}
+```{r Trend chunk}
 validLength <- 4
 trainLength <- length(DeptSales.ts) - validLength
 salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
@@ -141,7 +163,7 @@ legend(1, 100000, c("Dept Store Sales", "Linear Trend, R-sq = 0.3054", "2nd Orde
 **Trend in the same series with the data aggregated annually**
 
 
-```{r}
+```{r Aggregate chunk}
 # Aggregate by year and plot it
 SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
 YRange <- range(SalesYearly)
@@ -158,7 +180,7 @@ legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054"
 
 The second order polynomial trend line mirrors the aggregated data.
 
-```{r}
+```{r Polynomial chunk}
 # Aggregate by year and plot it
 SalesYearly <- aggregate(DeptSales.ts, nfrequency=1, FUN=sum)
 YRange <- range(SalesYearly)
@@ -175,7 +197,7 @@ legend(1, 300000, c("Dept Store Sales Aggregated", "Linear Trend, R-sq = 0.3054"
 
 Looking at how each quarter behaves over time, there appears to be an trend in each plot. The R-sq, for the trend lines are about 0.30 making the presence of this component ambiguous. Below is another plot where each line represents a quarter. Each quarter and each year shows growth which indicates some trend, perhaps weak, to the Department Store Sales series. However without firm proof of trend, when evaluating for a forecast model, I would test various ones with and without adjusting for trend when necessary.
 
-```{r}
+```{r Broken out by quarter}
 par(oma = c(0, 0, 0, 2))
 xrange <- c(1,6)
 yrange <- range(DeptSales.ts/1000)
@@ -198,7 +220,7 @@ legend(6, 90, 1:4, cex=0.8, col=colors, pch=plotchar, lty=linetype, title="Quart
 
 There is indisputably a seasonal component to the Dept. Store Sales series. Quarters behave the same throughout the year. The dramatic quarterly fluctuations in sales during each year makes it essential that an appropriate model is used to forecast this data series.
 
-```{r}
+```{r Season plot chunk}
 bold.text <- element_text(face = "bold", color = "black", size = 10)
 legendT <- "Legend"
 
@@ -243,7 +265,7 @@ axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2) 
 lines(DeptSales.ts)
 
-lines(MASales$fitted, lwd = 2, col = "blue") 
+#lines(MASales$fitted, lwd = 2, col = "blue") 
 lines(MAFCSales$mean, lwd = 2, lty = 2, col = "blue")
 legend(1, 100000, c("Actual Sales", "Moving Average \nMAPE = 15.67145"), lty = c(1,2), col = c("black","blue"), lwd = c(2,2),  bty = "n")
 
