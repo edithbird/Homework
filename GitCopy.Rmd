@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-	echo = FALSE,
+	echo = TRUE,
 	message = FALSE,
 	warning = FALSE
 )
@@ -473,11 +473,31 @@ HWforecast
 **ii. Using the forecasts for the validation set that you came up with in i. above,**
 
 *compute the MAPE values for the forecasts of quarters 21-22.**
+
+
 ```{r}
 
+library(forecast)
+#windows for dept sales
+timeS <- time(DeptSales.ts)
+nvalidS <- 4
+ntrainS <- length(DeptSales.ts) - nvalidS
+trainWindowDS <- window(DeptSales.ts, start = timeS[1], end = timeS[ntrainS])
+validWindowDS <- window(DeptSales.ts, start = timeS[ntrainS +1], end = timeS[ntrainS + nvalidS - 2])
+validWindowDS
+twowindowValid <- forecast(HWfn, h = 2)
+twowindowValid
+accuracy(twowindowValid, validWindowDS)
+```
 
+```{r}
+#This is the forecast for the 4 period validation
+HWforecast
 accuracy(HWforecast, salesValid)
 ```
+
+
+
 
 
 **5c. The fit and the residuals were displayed in the book. **
@@ -498,30 +518,12 @@ legend(1, 100000, c("Actual Sales", "Holt Winters Fitted", "Holt Winters Forecas
 ```
 
 ```{r}
-plot(HWfn$residuals)
-```
-
-
-```{r}
-# Residrange <- range(HWfn$residuals)
-# Residrange
-# 
-# plot(HWfn$residuals, main="title", sub="subtitle",
-#   xlab="X-axis label", ylab="y-axix label",
-#   xlim=c(1,7), ylim=c(-0.04, 0.06))
-
-
-
-plot(c(1,6), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales Residuals", bty = "n")
+plot(HWfn$residuals, xlab = "Year", ylab = "Dept Store Sales Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales Residuals", bty = "n")
 axis(1, at = seq(1, 6, 1), labels = format(seq(1, 6, 1)), pos = 0)
 axis(2, at = seq(-0.04, 0.06, .01), labels = format(seq(-4000, 6000, 1000)), las = 2)
-lines(HWfn$residuals, bty = "l", lwd = 2)
-# lines(HWfn$fitted, col = "blue", lty = 3, lwd = 2)
-# lines(HWforecast$mean, col = "blue", lty = 2, lwd = 2)
-legend(1, 10, c("Actual Sales", "Holt Winters Fitted", "Holt Winters Forecast"), lty = c(1,3,2), col = c("black", "blue", "blue"), lwd = c(2,2,2),  bty = "n")
-abline(v = 0)
-
 ```
+
+
 
 
 5d. Another analyst decided to take a much simpler approach, and instead of using exponential smoothing he used differencing.
@@ -565,9 +567,74 @@ plot(doubleDiff,  ylab="Lag-4, then Lag-1", xlab="Year", bty="l", main="D. Dept 
 #double differenced
 ```
 
-5e. Forecast quarters 21-22 using the average of the double-differenced series from (d). Remember to use only the training period (until quarter 20), and to adjust back for the trend and seasonal pattern.
+**5e. Forecast quarters 21-22 using the average of the double-differenced series from (d). Remember to use only the training period (until quarter 20), and to adjust back for the trend and seasonal pattern.**
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MAwithSeasonTrend <- meanf(diff(diff(salesTrain, lag = 4), lag = 1))
+MASeasTrForecast <- forecast(MAwithSeasonTrend, h = validLength)
+realForecasts1 <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecasts1[i] <- MASeasTrForecast$mean [i]  + salesTrain[(trainLength+i)-validLength] + (salesTrain[trainLength] - salesTrain[trainLength - validLength])
+  } else{
+    realForecasts1[i] <- MASeasTrForecast$mean[i] + salesTrain[(trainLength+i)-validLength] + (realForecasts1[i-1] - salesTrain[trainLength+i-1-validLength])
+  }
+}
+realForecasts1
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual and Moving Average Forecasts")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(DeptSales.ts, bty = "l", lwd = 2)
+lines(seq(6, 7-1/validLength, 1/validLength), realForecasts1, col="blue", lwd=2, lty=3)
+lines(HWforecast$mean, col = "red", lty = 2, lwd = 2)
+legend(1, 100000, c("Actual Sales", "Double Differenced, Mean Forecast MAPE = 4.07", "Holt Winter's Forecast, MAPE = 0.8449629"), lty = c(1,3,2), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+```
+
+```{r}
+realForecasts1
+```
+
+```{r}
+HWforecast
+HWforecast$mean
+```
+
+
+```{r}
+frange <- range(salesValid)
+
+frange
+
+plot(c(1,4), frange, type = "n", xlab = "Quarter", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual Sales and Holt Winters Model")
+
+axis(1, at = seq(1, 4, 1), labels = format(seq(1, 4, 1)))
+axis(2, at = seq(60000, 105000, 10000), labels = format(seq(60, 105, 10)), las = 2)
+#lines(validWindow, bty = "l", lwd = 2)
+lines(realForecasts1, col = "blue", lty = 3, lwd = 2)
+#lines(HWforecast, col = "blue", lty = 2, lwd = 2)
+legend(1, 100000, c("Actual Sales", "Holt Winters Fitted", "Holt Winters Forecast"), lty = c(1,3,2), col = c("black", "blue", "blue"), lwd = c(2,2,2),  bty = "n")
+
+```
 
 5f. Compare the forecasts from (e) to the exponential smoothing forecasts found in (b). Which of the two forecasting methods would you choose? Explain.
+
+**Accuracy meanf double differenced**
+
+```{r}
+accuracy(realForecasts1, salesValid)
+```
+
+**Accuracy HW**
+```{r}
+accuracy(HWforecast, salesValid)
+```
+
 
 **5g. What is an even simpler approach that should be compared as a baseline? Complete that comparison.**
 
@@ -685,5 +752,47 @@ accuracy(hSales.pred, salesValid)
 summary(hSales)
 ```
 
+###5e
 
+
+```{r}
+validLength <- 4
+trainLength <- length(DeptSales.ts) - validLength
+salesTrain <- window(DeptSales.ts, end = c(1, trainLength))
+salesValid <- window(DeptSales.ts, start = c(1, trainLength + 1))
+MAwithSeasonTrend <- meanf(diff(diff(salesTrain, lag = 4), lag = 1))
+MASeasTrForecast <- forecast(MAwithSeasonTrend, h = validLength)
+realForecasts1 <- vector()
+for (i in 1:validLength){
+  if(i == 1){
+    
+    realForecasts1[i] <- MASeasTrForecast$mean [i]  + salesTrain[(trainLength+i)-validLength] + (salesTrain[trainLength] - salesTrain[trainLength - validLength])
+  } else{
+    realForecasts1[i] <- MASeasTrForecast$mean[i] + salesTrain[(trainLength+i)-validLength] + (realForecasts1[i-1] - salesTrain[trainLength+i-1-validLength])
+  }
+}
+realForecasts1
+yrange <- range(DeptSales.ts)
+plot(c(1,7), yrange, type = "n", xlab = "Year", ylab = "Dept Store Sales (thousands)", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Actual and Moving Average Forecasts")
+axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
+axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
+lines(DeptSales.ts, bty = "l", lwd = 2)
+lines(seq(6, 7-1/validLength, 1/validLength), realForecasts1, col="blue", lwd=2, lty=3)
+lines(HWforecast$mean, col = "red", lty = 2, lwd = 2)
+legend(1, 100000, c("Actual Sales", "Double Differenced, Mean Forecast MAPE = 4.07", "Holt Winter's Forecast, MAPE = 0.8449629"), lty = c(1,3,2), col = c("black", "blue", "red"), lwd = c(2,2,2),  bty = "n")
+
+
+
+```
+
+**Accuracy meanf double differenced**
+
+```{r}
+accuracy(realForecasts1, salesValid)
+```
+
+**Accuracy HW**
+```{r}
+accuracy(HWforecast, salesValid)
+```
 
