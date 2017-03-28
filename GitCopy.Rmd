@@ -704,7 +704,13 @@ plot(Fortified.ts, xlab = "Year", ylab = "Sales (thousands)", col = "black", mai
 
 lines(FortifiedSmooth$fitted, col = "blue", lty = 2, lwd = 2)
 lines(FortifiedForecast$mean, lty = 3, lwd = 3, col = "blue")
-legend(1988, 5500, c("Actual Sales", "HW Fitted MAPE = 7.37", "Forecast MAPE = 13"), lty = c(1,2,3), col = c("black", "blue", "blue"), lwd = c(2,2,3),  bty = "n")
+legend(1980, 2400, c("Actual Sales", "HW Fitted MAPE = 7.37", "Forecast MAPE = 13"), lty = c(1,2,3), col = c("black", "blue", "blue"), lwd = c(2,2,3),  bty = "n")
+abline(v=1994)
+arrows(1980, 5000, 1994, 5000, code=3, length=0.1)
+text(1985, 5300, "Training")
+abline(v=1995)
+arrows(1994, 5000, 1995, 5000, code=3, length=0.1)
+text(1994.5, 5300, "Val")
 ```
 
 ###Appendix 
