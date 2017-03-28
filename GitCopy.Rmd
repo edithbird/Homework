@@ -677,83 +677,6 @@ dim(wine)
 names(wine)
 ```
 
-**Fortified**
-
-```{r}
-Fortified.ts <- ts(wine$Fortified, start = c(1980, 1), frequency = 12)
-FortifiedvalidLength <- 12
-FortifiedtrainLength <- length(Fortified.ts) - FortifiedvalidLength
-FortifiedsalesTrain <- window(Fortified.ts, end = c(1980, FortifiedtrainLength))
-FortifiedsalesValid <- window(Fortified.ts, start = c(1980, FortifiedtrainLength + 1))
-plot(Fortified.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Fortified Wine Sales")
-Fortified <- ets(FortifiedsalesTrain, model = "ZZZ")
-Fortified
-```
-
-**Red**
-
-```{r}
-Red.ts <- ts(wine$Red, start = c(1980, 1), frequency = 12)
-RedvalidLength <- 12
-RedtrainLength <- length(Red.ts) - RedvalidLength
-RedsalesTrain <- window(Red.ts, end = c(1980, RedtrainLength))
-RedsalesValid <- window(Red.ts, start = c(1980, RedtrainLength + 1))
-plot(Red.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Red Wine Sales")
-Red <- ets(RedsalesTrain, model = "ZZZ")
-Red
-```
-**Rose**
-
-```{r}
-Rose.ts <- ts(wine$Rose, start = c(1980, 1), frequency = 12)
-RosevalidLength <- 12
-RosetrainLength <- length(Rose.ts) - RosevalidLength
-RosesalesTrain <- window(Rose.ts, end = c(1980, RosetrainLength))
-RosesalesValid <- window(Rose.ts, start = c(1980, RosetrainLength + 1))
-plot(Rose.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Rose Sales")
-Rose <- ets(RosesalesTrain, model = "ZZZ")
-Rose
-
-```
-**Sparkling**
-
-```{r}
-Sparkling.ts <- ts(wine$sparkling, start = c(1980, 1), frequency = 12)
-SparklingvalidLength <- 12
-SparklingtrainLength <- length(Sparkling.ts) - SparklingvalidLength
-SparklingsalesTrain <- window(Sparkling.ts, end = c(1980, SparklingtrainLength))
-SparklingsalesValid <- window(Sparkling.ts, start = c(1980, SparklingtrainLength + 1))
-plot(Sparkling.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Sparkling Sales")
-Sparkling <- ets(SparklingsalesTrain, model = "ZZZ")
-Sparkling
-```
-**Sweet**
-
-```{r}
-Sweet.white.ts <- ts(wine$Sweet.white, start = c(1980, 1), frequency = 12)
-SweetvalidLength <- 12
-SweettrainLength <- length(Sweet.white.ts) - SweetvalidLength
-SweetsalesTrain <- window(Sweet.white.ts, end = c(1980, SweettrainLength))
-SweetsalesValid <- window(Sweet.white.ts, start = c(1980, SweettrainLength + 1))
-plot(Sweet.white.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Sweet Wine Sales")
-Sweet <- ets(SweetsalesTrain, model = "ZZZ")
-Sweet
-```
-**Dry**
-
-```{r}
-Dry.white.ts <- ts(wine$Dry.white, start = c(1980, 1), frequency = 12)
-DryvalidLength <- 12
-DrytrainLength <- length(Dry.white.ts) - DryvalidLength
-DrysalesTrain <- window(Dry.white.ts, end = c(1980, DrytrainLength))
-DrysalesValid <- window(Dry.white.ts, start = c(1980, DrytrainLength + 1))
-plot(Dry.white.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Dry Wine Sales")
-Dry <- ets(DrysalesTrain, model = "ZZZ")
-Dry
-```
-
-
-
 
 
 
@@ -765,15 +688,15 @@ Dry
 
 In order to decide on one method for short term smoothing method for forecasting all of the various wine styles, I would choose Holt Winters. Of the smoothing methods we have covered, this is the only one which is suitable for series that have trend and/or seasonality components. 
 
-Above, I ran the ets() function with model = "ZZZ" and let the model choose the $\alpha$, $=\beta$, and $\gamma$ values. Each wine style has a seasonal component and all but Sparkling and Sweet have a trend component. According to our text the Holt Winter's method is very versatile with these components as well. "Being an adaptive method, Holt-Winter's exponential smoothing allows the level, trend, and seasonality patterns to change over time. The three components are estimated and updated as new information arrives." This is important given that the Australian Wine styles all have varying seasonal patterns with different cycles that would otherwise may not be recognized using simple smoothing with differencing. 
+I ran the ets() function with model = "ZZZ" and let the model choose the $\alpha$, $=\beta$, and $\gamma$ values. These results are shown at the end of the report. Each wine style has a seasonal component and all but Sparkling and Sweet have a trend component. According to our text the Holt Winter's method is very versatile with these components as well. "Being an adaptive method, Holt-Winter's exponential smoothing allows the level, trend, and seasonality patterns to change over time. The three components are estimated and updated as new information arrives." This is important given that the Australian Wine styles all have varying seasonal patterns with different cycles that would otherwise may not be recognized using simple smoothing with differencing. 
 
-Shmueli, Galit; Lichtendahl Jr, Kenneth C.. Practical Time Series Forecasting with R: A Hands-On Guide [2nd Edition] (Practical Analytics) (Page 95). Axelrod Schnall Publishers. Kindle Edition. 
 
 **(b) Fortified wine has the largest market share of the six types of wine. You are asked to focus on fortified wine sales alone and produce as accurate a forecast as possible for the next two months.**
 
 *Start by partitioning the data using the period until Dec- 1993 as the training period.
 
 ```{r}
+Fortified.ts <- ts(wine$Fortified, start = c(1980, 1), frequency = 12)
 FortifiedvalidLength <- 12
 FortifiedtrainLength <- length(Fortified.ts) - FortifiedvalidLength
 FortifiedsalesTrain <- window(Fortified.ts, end = c(1980, FortifiedtrainLength))
@@ -801,29 +724,58 @@ ForecastZZM2Mos
 
 ```{r}
 
-plot(FortifiedSmooth$residuals)
+#plot(FortifiedSmooth$residuals)
 
-plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Dept Store Sales Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Dept Store Sales Residuals", bty = "n")
-axis(1, at = seq(1, 15, 1), labels = format(seq(1, 15, 1)))
+plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Fortified Wine Sales Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Fortified Wine Sales Residuals", bty = "n")
+axis(1, at = seq(1980, 1995, 1), labels = format(seq(1980, 1995, 1)))
 axis(2, at = seq(-0.4, 0.4, .1), labels = format(seq(-4000, 4000, 1000)), las = 2)
+
+
+# Plot the histogram and store it to use later
+myhist <- hist(FortifiedSmooth$residuals, ylab="Frequency", xlab="Forecast Error", main="", bty="l")
+
+# Use stored hist object to help set up density curve
+multiplier <- myhist$counts / myhist$density
+
+# Need to ignore NA from 1985
+mydensity <- density(FortifiedSmooth$residuals, na.rm=TRUE)
+mydensity$y <- mydensity$y * multiplier[1]
+
+# Add the density curve
+lines(mydensity)
+
+qqnorm(FortifiedSmooth$residuals[13:168])
+qqline(FortifiedSmooth$residuals[13:168])
+
 ```
 
 
+**i. Based on this plot, which of the following statements are reasonable?** 
+
+
+Refer to the residuals plot for this question. 
+
+. Decembers (month 12) are not captured well by the model. This is difficult to determine given that there is so much data. We would need to zoom in to look closely at each month 
+
+. There is a strong correlation between sales on the same calendar month. This **is not** a reasonable statement
+
+. The model does not capture the seasonality well.**This is** a reasonable statement because the residual plot is not intended to capture seasonality. The time series plot and seasonal plots will capture seasonality. 
+
+. We should first deseasonalize the data and then apply Holt-Winter's exponential smoothing.This **is not** a reasonable statement because the Holt Winter's model is one that accomodates seasonality, no matter the complexity of the seasonal cycles. Deaseaonalized data is only necessary when being fit to models that are for data with stationarity. 
+
+
+
+**ii. How can you handle the above effect with exponential smoothing?**
+
+Higher value and frequency of residuals can be minimized with a good forecasting model. Exponential smoothing models are versatile because the can fit a variety of components, namely, trend and seasonality. 
 
 ```{r}
+plot(Fortified.ts, xlab = "Year", ylab = "Sales (thousands)", col = "black", main = "Fortified Wine Sales", lwd = 2)
 
+lines(FortifiedSmooth$fitted, col = "blue", lty = 2, lwd = 2)
+lines(FortifiedForecast$mean, lty = 3, lwd = 3, col = "blue")
+legend(1988, 5500, c("Actual Sales", "Holt Winters Fitted", "Holt Winters Forecast"), lty = c(1,2,3), col = c("black", "blue", "blue"), lwd = c(2,2,3),  bty = "n")
 ```
-
-
-**i. Based on this plot, which of the following statements are reasonable?**
-
-*December"s (month 12) are not captured well by the model.
-
-*There is a strong correlation between sales on the same calendar month.
-
-*The model does not capture the seasonality well. *We should first deseasonalize the data and then apply Holt-Winter's exponential smoothing.
-
-ii. How can you handle the above effect with exponential smoothing?
 
 ###Appendix Information pertaining to Q. 5
 
@@ -892,7 +844,7 @@ accuracy(hSales.pred, salesValid)
 summary(hSales)
 ```
 
-###5e
+5e
 
 
 ```{r}
@@ -935,4 +887,142 @@ accuracy(realForecasts1, salesValid)
 ```{r}
 accuracy(HWforecast, salesValid)
 ```
+
+###Pertaining to Question 8. Time series plots of Australian wines and the ets function to determine the "optimal" smoothing model and smoothing constants. 
+
+**Fortified**
+
+```{r}
+Fortified.ts <- ts(wine$Fortified, start = c(1980, 1), frequency = 12)
+FortifiedvalidLength <- 12
+FortifiedtrainLength <- length(Fortified.ts) - FortifiedvalidLength
+FortifiedsalesTrain <- window(Fortified.ts, end = c(1980, FortifiedtrainLength))
+FortifiedsalesValid <- window(Fortified.ts, start = c(1980, FortifiedtrainLength + 1))
+plot(Fortified.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Fortified Wine Sales")
+Fortified <- ets(FortifiedsalesTrain, model = "ZZZ")
+Fortified
+```
+
+**Red**
+
+```{r}
+Red.ts <- ts(wine$Red, start = c(1980, 1), frequency = 12)
+RedvalidLength <- 12
+RedtrainLength <- length(Red.ts) - RedvalidLength
+RedsalesTrain <- window(Red.ts, end = c(1980, RedtrainLength))
+RedsalesValid <- window(Red.ts, start = c(1980, RedtrainLength + 1))
+plot(Red.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Red Wine Sales")
+Red <- ets(RedsalesTrain, model = "ZZZ")
+Red
+```
+**Rose**
+
+```{r}
+Rose.ts <- ts(wine$Rose, start = c(1980, 1), frequency = 12)
+RosevalidLength <- 12
+RosetrainLength <- length(Rose.ts) - RosevalidLength
+RosesalesTrain <- window(Rose.ts, end = c(1980, RosetrainLength))
+RosesalesValid <- window(Rose.ts, start = c(1980, RosetrainLength + 1))
+plot(Rose.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Rose Sales")
+Rose <- ets(RosesalesTrain, model = "ZZZ")
+Rose
+
+```
+
+**Sparkling**
+
+```{r}
+Sparkling.ts <- ts(wine$sparkling, start = c(1980, 1), frequency = 12)
+SparklingvalidLength <- 12
+SparklingtrainLength <- length(Sparkling.ts) - SparklingvalidLength
+SparklingsalesTrain <- window(Sparkling.ts, end = c(1980, SparklingtrainLength))
+SparklingsalesValid <- window(Sparkling.ts, start = c(1980, SparklingtrainLength + 1))
+plot(Sparkling.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Sparkling Sales")
+Sparkling <- ets(SparklingsalesTrain, model = "ZZZ")
+Sparkling
+```
+
+**Sweet**
+
+```{r}
+Sweet.white.ts <- ts(wine$Sweet.white, start = c(1980, 1), frequency = 12)
+SweetvalidLength <- 12
+SweettrainLength <- length(Sweet.white.ts) - SweetvalidLength
+SweetsalesTrain <- window(Sweet.white.ts, end = c(1980, SweettrainLength))
+SweetsalesValid <- window(Sweet.white.ts, start = c(1980, SweettrainLength + 1))
+plot(Sweet.white.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Sweet Wine Sales")
+Sweet <- ets(SweetsalesTrain, model = "ZZZ")
+Sweet
+```
+**Dry**
+
+```{r}
+Dry.white.ts <- ts(wine$Dry.white, start = c(1980, 1), frequency = 12)
+DryvalidLength <- 12
+DrytrainLength <- length(Dry.white.ts) - DryvalidLength
+DrysalesTrain <- window(Dry.white.ts, end = c(1980, DrytrainLength))
+DrysalesValid <- window(Dry.white.ts, start = c(1980, DrytrainLength + 1))
+plot(Dry.white.ts, xlab = "Year", ylab = "Sales (thousands)", col = "blue", main = "Dry Wine Sales")
+Dry <- ets(DrysalesTrain, model = "ZZZ")
+Dry
+```
+
+
+```{r, echo=FALSE}
+par(mfrow = c(2,2))
+FortifiedSmooth <- ets(FortifiedsalesTrain, model = "ZZM", alpha = 0.01)
+FortifiedSmooth
+FortifiedForecast <- forecast(FortifiedSmooth, h = FortifiedvalidLength)
+
+accuracy(FortifiedForecast, FortifiedsalesValid)
+ForecastSmooth2Mos <- ets(Fortified.ts, model = "ZZM")
+ForecastZZM2Mos <- forecast(ForecastSmooth2Mos, h = 2)
+ForecastZZM2Mos
+plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Fortified Wine Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Fortified Wine Residuals alpha = 0.01", bty = "n")
+axis(1, at = seq(1980, 1995, 1), labels = format(seq(1980, 1995, 1)))
+axis(2, at = seq(-0.4, 0.4, .1), labels = format(seq(-4000, 4000, 1000)), las = 2)
+
+
+
+FortifiedSmooth <- ets(FortifiedsalesTrain, model = "ZZM", alpha = 0.2)
+FortifiedSmooth
+FortifiedForecast <- forecast(FortifiedSmooth, h = FortifiedvalidLength)
+
+accuracy(FortifiedForecast, FortifiedsalesValid)
+ForecastSmooth2Mos <- ets(Fortified.ts, model = "ZZM")
+ForecastZZM2Mos <- forecast(ForecastSmooth2Mos, h = 2)
+ForecastZZM2Mos
+plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Fortified Wine Residuals alpha = 0.2", bty = "n")
+axis(1, at = seq(1980, 1995, 1), labels = format(seq(1980, 1995, 1)))
+axis(2, at = seq(-0.4, 0.4, .1), labels = format(seq(-4000, 4000, 1000)), las = 2)
+
+
+
+FortifiedSmooth <- ets(FortifiedsalesTrain, model = "ZZM", alpha = 0.6)
+FortifiedSmooth
+FortifiedForecast <- forecast(FortifiedSmooth, h = FortifiedvalidLength)
+
+accuracy(FortifiedForecast, FortifiedsalesValid)
+ForecastSmooth2Mos <- ets(Fortified.ts, model = "ZZM")
+ForecastZZM2Mos <- forecast(ForecastSmooth2Mos, h = 2)
+ForecastZZM2Mos
+plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Fortified Wine Residuals alpha = 0.6", bty = "n")
+axis(1, at = seq(1980, 1995, 1), labels = format(seq(1980, 1995, 1)))
+axis(2, at = seq(-0.4, 0.4, .1), labels = format(seq(-4000, 4000, 1000)), las = 2)
+
+
+
+FortifiedSmooth <- ets(FortifiedsalesTrain, model = "ZZM", alpha = 0.98)
+FortifiedSmooth
+FortifiedForecast <- forecast(FortifiedSmooth, h = FortifiedvalidLength)
+
+accuracy(FortifiedForecast, FortifiedsalesValid)
+ForecastSmooth2Mos <- ets(Fortified.ts, model = "ZZM")
+ForecastZZM2Mos <- forecast(ForecastSmooth2Mos, h = 2)
+ForecastZZM2Mos
+plot(FortifiedSmooth$residuals, xlab = "Year", ylab = "Residuals", bty = "l", xaxt = "n", yaxt = "n", lwd = 2, main = "Fortified Wine Residuals alpha = 0.98", bty = "n")
+axis(1, at = seq(1980, 1995, 1), labels = format(seq(1980, 1995, 1)))
+axis(2, at = seq(-0.4, 0.4, .1), labels = format(seq(-4000, 4000, 1000)), las = 2)
+```
+
 
