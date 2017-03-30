@@ -318,6 +318,7 @@ If we let the ets() decide which model and which $\alpha$ value work best for th
 ```{r}
 SESRaw1 <- ets(salesTrain, model = "ZZZ")
 summary(SESRaw1)
+
 ```
 
 To use SES for the Dept Store Sales data, the series would have to be deseasonalized. Even if we deseasonalize the Dept Store Sales data with differencing and run SES "ANN", the MAPE is worse than many we have seen. The plot below shows the actual series with the SES forecats using raw and deseasonalized data.
@@ -353,7 +354,7 @@ lines(seq(6, 7-1/validLength, 1/validLength), realForecastsSES, col="red", lwd=2
 lines(RawForecast$mean, col = "blue", lty = 2, lwd = 2)
 
 legend(1, 100000, c("Actual Sales", "SES lag-4, MAPE = 8.02", "SES Raw Data, MAPE = 15.28"), lty = c(1,2, 2), col = c("black", "red", "blue"), lwd = c(2,2, 2),  bty = "n")
-
+accuracy(realForecastsSES, salesValid)
 ```
 
 ** * Double exponential smoothing of the raw series:**
@@ -441,6 +442,7 @@ accuracy(twowindowValid, validWindowDS)
 #This is the forecast for the 4 period validation
 HWforecast
 accuracy(HWforecast, salesValid)
+validationResiduals <- salesValid - HWforecast$mean  
 ```
 
 
@@ -457,8 +459,11 @@ axis(1, at = seq(1, 7, 1), labels = format(seq(1, 7, 1)))
 axis(2, at = seq(40000, 105000, 10000), labels = format(seq(40, 105, 10)), las = 2)
 lines(DeptSales.ts, bty = "l", lwd = 2)
 lines(HWfn$fitted, col = "blue", lty = 3, lwd = 2)
-lines(HWforecast$mean, col = "blue", lty = 2, lwd = 2)
+lines(HWforecast$mean, col = "blue", lty = 2, lwd = 2, type = "b")
+lines(validationResiduals, col = "green", lwd = 5, type = "b")
 legend(1, 100000, c("Actual Sales", "Holt Winters Fitted", "Holt Winters Forecast"), lty = c(1,3,2), col = c("black", "blue", "blue"), lwd = c(2,2,2),  bty = "n")
+
+plot(validationResiduals, type = "b", col = "green", lwd = 2)
 ```
 
 ```{r}
