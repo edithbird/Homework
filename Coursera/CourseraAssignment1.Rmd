@@ -1,0 +1,224 @@
+---
+title: "Cheat Sheet"
+author: "Christine Iyer"
+date: "April 13, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[For reference](https://github.com/derekfranks/practice_assignment/blob/master/practice_assignment.rmd)
+
+**Download and unzip a file**
+
+```{r}
+dataset_url <- "http://s3.amazonaws.com/practice_assignment/diet_data.zip"
+download.file(dataset_url, "diet_data.zip")
+unzip("diet_data.zip", exdir = "diet_data")
+list.files("diet_data")
+#look at one file
+andy <- read.csv("diet_data/Andy.csv")
+#find his final weight on Day 30 4 ways
+andy[30, "Weight"]
+andy[which(andy$Day == 30), "Weight"]
+andy[which(andy[,"Day"] == 30), "Weight"]
+subset(andy$Weight, andy$Day==30)
+#net loss
+andy[30, "Weight"] - andy[1, "Weight"]
+#list all files as an object
+files <- list.files("diet_data")
+files[3:5]
+#In file(file, "rt") :cannot open file 'John.csv': No such file or directory
+#head(read.csv(files[3]))
+files_full <- list.files("diet_data", full.names = T)
+#see head of John
+head(read.csv(files_full[3]))
+#combine andy and david
+andy_david <- rbind(andy, read.csv(files_full[2]))
+#subset of day 25
+day_25 <- andy_david[which(andy_david$Day ==25), ]
+#using a loop to combine everyones, so don't have to manually append each one
+#create an object 
+dat <- data.frame()
+#loop
+for (i in 1:5) {
+        dat <- rbind(dat, read.csv(files_full[i]))
+}
+#media weight on day 30
+median(dat$Weight, na.rm=TRUE)
+#subset day 30
+dat_30 <- dat[which(dat[, "Day"] == 30),]
+#median of that subset
+median(dat_30$Weight)
+#the values are different because someone was excluded in the prior function
+#build a function to see the median weight on any given day
+
+
+
+```
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+weight_median <- function(directory, day){
+  files_list <- list.files(directory, full.names = T)
+  dat <- data.frame()
+  for(i in 1:5){
+    dat <- rbind(dat, read.csv(files_list[i]))
+  }
+ dat_subset <- dat[which(dat[,"Day"]==day),]
+ median(dat_subset[,"Weight"], na.rm = T)
+}
+
+```
+
+```{r}
+weight_median(directory = "diet_data", day = 20)
+weight_median("diet_data", 4)
+weight_median("diet_data", 17)
+```
+
+**for() loop
+
+```{r}
+x <- c("a", "b", "c", "d", "e", "f")
+for(i in 1:6){
+  print(x[i])
+}
+```
+
+**seq_along() and for() loop**
+
+```{r}
+for(i in seq_along(x)){
+  print(x[i])
+}
+```
+
+**using letter notation**
+
+```{r}
+for(letter in x){
+  print(letter)
+}
+```
+
+**simplest, no curly braces**
+
+```{r}
+for(i in 1:4) print(x[i])
+for(i in 1:6) print(x[i])
+```
+
+**Nested for loops**
+for loop inside a for loop, useful in a 2 dimensional matrix where want to loop over the rows and then columns
+
+```{r}
+#create matrix. matrix(data to include, #rows, #columns)
+x <- matrix(1:6, 2,3)
+x
+for(i in seq_len(nrow(x))){
+  for(j in seq_len(ncol(x))){
+    print(x[i,j]/2)
+    print(x[i,j]/4)
+  }
+}
+```
+
+**while loop**
+make sure the condition sets an end point
+
+```{r}
+z <- 5
+while(z >= 3 && z <=10){
+  print(z)
+  coin <- rbinom(1,1,0.5)
+  #no end point yet
+  
+  if(coin == 1){#random walk
+    z <- z + 1
+  }
+  else{
+    z <- z-1
+  }
+}
+```
+
+**repeat()**
+initiates an infinite loop, the only way to exit is to call a break
+
+```{r}
+x0 <- 1
+tol <- 1e-8
+
+repeat{
+  x1 <- rbinom(1,1,0.5)
+  
+  if(abs(x1-x0) < tol){
+    break
+  } else{
+    x0 <- x1
+  }
+}
+```
+
+**skiping an iteration, use next()**
+
+```{r}
+for(i in 1:50){
+  if(i <= 20){
+    next
+  }
+  #Do something here
+}
+```
+
+**Writing Functions**
+adding 2 numbers
+
+```{r}
+#2 values so 2 arguments
+add2 <- function(x,y){
+  x+y
+}
+#now test it to return 2+3
+add2(4,3)
+```
+
+take a vector of numbers and return a subset of it that's above 10
+
+```{r}
+above10 <- function(x){
+  
+  use <- x>10
+  x[use]
+} 
+#x <- c(5,45,34,23)
+above10(x)
+```
+
+```{r}
+above <- function(x, n = 10){
+  use <- x > 10
+  x[use]
+  
+}
+above(14)
+above(4)
+```
+
+```{r}
+ClinicAb <- read.csv("Clinics.csv")
+
+
+columnmean <- function(x){
+  nc <- ncol(x)
+  means <- numeric(nc)
+  for(i in 1:nc){
+    means[i] <- mean(x[, i])
+  }
+  means
+}
+columnmean(ClinicAb)
+```
+
