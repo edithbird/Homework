@@ -208,6 +208,7 @@ above(4)
 ```
 
 ```{r}
+setwd("/Users/Chris Iyer/Documents/")
 ClinicAb <- read.csv("Clinics.csv")
 
 
