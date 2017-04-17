@@ -1,0 +1,25 @@
+---
+title: "BasicCode"
+author: "Christine Iyer"
+date: "April 17, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/Chris Iyer/Dropbox/")
+library(forecast)
+ridership <- read.csv("Amtrak.csv")
+ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991, 1), frequency = 12)
+time <- time(ridership.ts)
+tail(ridership.ts)
+nValid <- 36 
+nTrain <- length(ridership.ts) - nValid 
+train.ts <- window(ridership.ts, start = time[1], end = time[nTrain]) 
+valid.ts <- window(ridership.ts, start = time[nTrain + 1], end = time[nTrain + nValid]) 
+plot(ridership.ts)
+```
+
