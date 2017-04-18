@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+**Partitioning using the time() function**
+
 ```{r}
 setwd("/Users/Chris Iyer/Dropbox/")
 library(forecast)
@@ -16,10 +18,41 @@ ridership <- read.csv("Amtrak.csv")
 ridership.ts <- ts(ridership$Ridership_in_thousands, start = c(1991, 1), frequency = 12)
 time <- time(ridership.ts)
 tail(ridership.ts)
-nValid <- 36 
-nTrain <- length(ridership.ts) - nValid 
-train.ts <- window(ridership.ts, start = time[1], end = time[nTrain]) 
-valid.ts <- window(ridership.ts, start = time[nTrain + 1], end = time[nTrain + nValid]) 
+nValid1 <- 36 
+nTrain1 <- length(ridership.ts) - nValid1 
+train.ts1 <- window(ridership.ts, start = time[1], end = time[nTrain1]) 
+valid.ts1 <- window(ridership.ts, start = time[nTrain1 + 1], end = time[nTrain1 + nValid1]) 
 plot(ridership.ts)
 ```
+
+**Another way to partition**
+
+```{r}
+nValid2 <- 36 
+nTrain2 <- length(ridership.ts) - nValid2 
+train.ts2 <- window(ridership.ts, start = c(1991, 1), end = c(1991, nTrain2)) 
+valid.ts2 <- window(ridership.ts, start = c(1991, nTrain2 + 1), end = c(1991, nTrain2 + nValid2))
+```
+
+**Roll Forward partitioning used for naive forecasting. Errors calculated.** 
+
+```{r}
+fixed.nValid <- 36 
+fixed.nTrain <- length(ridership.ts) - fixed.nValid 
+stepsAhead <- 1 
+error <- rep(0, fixed.nValid - stepsAhead + 1) 
+percent.error <- rep(0, fixed.nValid - stepsAhead + 1)
+for(j in fixed.nTrain:(fixed.nTrain + fixed.nValid - stepsAhead)) { 
+  train.ts <- window(ridership.ts, start = c(1991, 1), end = c(1991, j)) 
+  valid.ts <- window(ridership.ts, start = c(1991, j + stepsAhead), end = c(1991, j + stepsAhead)) 
+  naive.pred <- naive(train.ts, h = stepsAhead) 
+  error[j - fixed.nTrain + 1] <- valid.ts - naive.pred$mean[stepsAhead] 
+  percent.error[j - fixed.nTrain + 1] <- error[j - fixed.nTrain + 1]/ valid.ts } 
+mean(abs(error)) 
+sqrt(mean(error^2)) 
+mean(abs(percent.error))
+
+
+```
+
 
