@@ -49,7 +49,11 @@ https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTaNgIjVruTY_rebXeXNgWuDQGM
 
 https://cdn4.iconfinder.com/data/icons/Gifts/128/bouquet.png
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
+
+colorPalette <- c("ivory", "lightgoldenrodyellow", "lightgoldenrod", "lightpink", "orange", "hotpink", "hotpink4",  "mediumpurple")
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+
 
 
 IconHosp <- makeIcon(iconUrl = "https://cdn4.iconfinder.com/data/icons/Gifts/128/bouquet.png", iconWidth = 31*215/230, iconHeight = 31, iconAnchorX = 31*215/230/2, iconAnchorY = 16)
@@ -94,11 +98,81 @@ names(NewMap)
 ```
 
 
-```{r, echo=TRUE}
+```{r}
+
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+colorPalette <- c("ivory", "lightgoldenrodyellow", "lightgoldenrod", "lightpink", "orange", "hotpink", "hotpink4",  "mediumpurple")
+paletteNew <- colorBin(colorPalette, domain = x$Clinics, bins = binsDensity)
+
+
+leaflet() %>% addPolygons(data = x,
+  stroke = FALSE,                        
+  fillColor = ~paletteNew(Clinics), 
+  weight = 2,
+  opacity = 1, 
+ 
+  fillOpacity = 0.7
+) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "violet")
+```
+
+```{r}
+
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+colorPalette <- c("ivory", "lightgoldenrodyellow", "lightgoldenrod", "lightpink", "orange", "hotpink", "hotpink4",  "mediumpurple")
+paletteNew <- colorBin("Blues", domain = x$Clinics, bins = binsDensity)
+
+
+leaflet() %>% addPolygons(data = x,
+  stroke = FALSE,                        
+  fillColor = ~paletteNew(Clinics), 
+  weight = 2,
+  opacity = 1, 
+ 
+  fillOpacity = 0.7
+) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "violet")
+
+```
+
+
+```{r}
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+
+paletteNew <- colorBin("Set1", domain = x$Clinics, bins = binsDensity)
+
+
+leaflet() %>% addPolygons(data = x,
+  stroke = FALSE,                        
+  fillColor = ~paletteNew(Clinics), 
+  weight = 2,
+  opacity = 1, 
+ 
+  fillOpacity = 0.7
+) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "violet")
+```
+
+```{r}
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+
+paletteNew <- colorBin("GnBu", domain = x$Clinics, bins = binsDensity)
+
+
+leaflet() %>% addPolygons(data = x,
+  stroke = FALSE,                        
+  fillColor = ~paletteNew(Clinics), 
+  weight = 2,
+  opacity = 1, 
+ 
+  fillOpacity = 0.7
+) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "plum")
+```
+
+
+%>% addLegend(pal = paletteNew, values = ~Clinics, opacity = 0.7, position = "bottomright")
+```{r, eval=FALSE, include=FALSE}
 #This is the map that works
 y <- leaflet() %>% 
   addProviderTiles("CartoDB.PositronNoLabels") %>% 
-  addPolygons(data = x, popup = ~popupLabel, fillColor = ~pal(x$Clinics), color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "navy",
+  addPolygons(data = x, fillColor = ~pal(x$Clinics), color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "navy",
     stroke = FALSE, fillOpacity = 0.25)
 y
 ```
@@ -109,8 +183,22 @@ pal1 <- qpal <- colorQuantile("Blues", x$Clinics, n = 4)
 
 y <- leaflet() %>% 
   addProviderTiles("CartoDB.PositronNoLabels") %>% 
-  addPolygons(data = x, popup = ~popupLabel, fillColor = ~pal1, color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat))
+  addPolygons(data = x, popup = ~popupLabel, fillColor = ~pal1, color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat)) %>% addLegend("bottomright", colors = c("ivory", "lightgoldenrodyellow", "lightgoldenrod", "lightpink", "orange", "hotpink", "hotpink4",  "mediumpurple"), labels = c("<= 0", "1-5", "6-10", "11-15", "16-20", "21-25", "26-30", ">= 31"), opacity = 1)
 y
 ```
 
+```{r, eval=FALSE, include=FALSE}
+binsDensity <- c(0,5,10,15,20,25,30,Inf)
+colorPalette <- c("ivory", "lightgoldenrodyellow", "lightgoldenrod", "lightpink", "orange", "hotpink", "hotpink4",  "mediumpurple")
+paletteNew <- colorBin("YlOrRd", domain = x$Clinics, bins = binsDensity)
+
+
+leaflet() %>% addPolygons(data = x,
+  fillColor = ~paletteNew(Clinics), 
+  weight = 2,
+  opacity = 1, 
+  color = "yellow", 
+  fillOpacity = 0.7
+) %>% addLegend(pal = paletteNew, values = ~Clinics, opacity = 0.7, title = NULL, position = "bottomright")
+```
 
