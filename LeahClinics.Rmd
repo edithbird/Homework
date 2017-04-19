@@ -21,6 +21,8 @@ library(rgdal)
 library(ggmap)
 library(dplyr)
 library(knitr)
+
+
 City <- c("Bangor", "Belfast","Calais", "Damariscotta", "Dexter", "Ellsworth", "Farmington", "Fort Kent", "Houlton", "Lewiston", "Machias", "Norway", "Presque Isle",  "Rockland", "Rumford", "Skowhegan","Waterville", "Portland", "Biddeford", "Topsham", "Brownville" )
 
 Clinics <- c(18, 1, 1, 1, 1,3,1, 19, 3, 10, 2,2,13,11,1,8,3, 0,0,0,0)
@@ -43,13 +45,21 @@ ClinicbyCounty <- Leahs %>% group_by(County) %>% summarise(sum(Clinics))
 ClinicbyCounty
 ```
 
+https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTaNgIjVruTY_rebXeXNgWuDQGMNrJ_rXaBZ0PIQzz-TCyzCcsddA
+
+https://cdn4.iconfinder.com/data/icons/Gifts/128/bouquet.png
+
 ```{r}
-IconHosp <- makeIcon(iconUrl = "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTaNgIjVruTY_rebXeXNgWuDQGMNrJ_rXaBZ0PIQzz-TCyzCcsddA", iconWidth = 31*215/230, iconHeight = 31, iconAnchorX = 31*215/230/2, iconAnchorY = 16)
+
+
+IconHosp <- makeIcon(iconUrl = "https://cdn4.iconfinder.com/data/icons/Gifts/128/bouquet.png", iconWidth = 31*215/230, iconHeight = 31, iconAnchorX = 31*215/230/2, iconAnchorY = 16)
+
+
 popupLabel <- paste(Leahs$City, " has ", Leahs$Clinics, " clinics\nfor your abortion pleasure")
 ```
 
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 New <- leaflet() %>% addTiles() %>% addMarkers(lng = Leahs$lon, lat = Leahs$lat, icon = IconHosp, popup = popupLabel) %>% setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addProviderTiles("CartoDB.Positron")
 New
 ```
@@ -63,29 +73,44 @@ me_counties <- me_counties <- readOGR("./county", "county")
 kable(head(me_counties))
 names(me_counties)
 me_counties <- spTransform(me_counties, CRS("+proj=longlat +datum=WGS84"))
-pal <- colorQuantile("PuRd", NULL, n = 4)
-
-
+pal <- colorQuantile("Blues", NULL, n = 4)
 ```
 
-```{r}
+```{r, echo=TRUE}
 library(raster)
 library(sp)
-head(me_counties)
 x <- sp::merge(me_counties, Leahs, by = 'CNTYCODE', duplicateGeoms = TRUE)
-#X <- merge(me_counties, Leahs, by.x = "CNTYCODE", by.y = "Code", incomparables=NULL)
 head(x)
-#names(me_counties)
-#head(CountyClinic)
+dim(x)
 
+pointsMap <- read.csv("NewMap.csv")
+head(pointsMap)
 ```
-
 
 ```{r}
-y <- leaflet() %>% 
-  addProviderTiles("CartoDB.Positron") %>% 
-  addPolygons(data = x,
-              popup = ~popupLabel , fillColor = ~pal(x$Clinics), color = "##D46A6A", weight = 1) %>% addMarkers(x, lng = x$lon, lat = x$lat, popup = popupLabel)
+NewMap <- read.csv("NewMap.csv")
+names(NewMap)
 
 ```
+
+
+```{r, echo=TRUE}
+#This is the map that works
+y <- leaflet() %>% 
+  addProviderTiles("CartoDB.PositronNoLabels") %>% 
+  addPolygons(data = x, popup = ~popupLabel, fillColor = ~pal(x$Clinics), color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat), color = "navy",
+    stroke = FALSE, fillOpacity = 0.25)
+y
+```
+
+```{r, eval=FALSE, include=FALSE}
+pal1 <- qpal <- colorQuantile("Blues", x$Clinics, n = 4)
+
+
+y <- leaflet() %>% 
+  addProviderTiles("CartoDB.PositronNoLabels") %>% 
+  addPolygons(data = x, popup = ~popupLabel, fillColor = ~pal1, color = "##D46A6A", weight = 1) %>%  setView(lng = -70.0589, lat = 43.3601, zoom = 6) %>% addCircleMarkers(data = NewMap, lng = jitter(NewMap$lng), lat = jitter(NewMap$lat))
+y
+```
+
 
