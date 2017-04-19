@@ -1,0 +1,45 @@
+---
+title: "NewClinics"
+author: "Christine Iyer"
+date: "April 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(pander)
+library(knitr)
+library(ggplot2)
+```
+
+
+```{r}
+Clinics <- read.csv("Clinics.csv", header = TRUE, stringsAsFactors = FALSE)
+pander(head(Clinics))
+```
+
+```{r}
+A <- ggplot(Clinics, aes(County, CountyClinics)) + geom_point(aes(colour = factor(value), size = factor(value)))
+A
+```
+
+```{r}
+B <- ggplot(Clinics, aes(County)) + geom_bar(aes(fill = factor(value)))
+B
+```
+
+```{r}
+Clinic98 <- read.csv("NewMap.csv", header = TRUE)
+head(Clinic98)
+```
+
+```{r}
+library(dplyr)
+Clinic98 <- Clinic98 %>% group_by(City) %>% summarise(NoinCity = sum(value))
+head(Clinic98)
+ggplot(Clinic98, aes(County, colour = ))
+```
+
