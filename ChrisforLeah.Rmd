@@ -6,7 +6,11 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
 
@@ -28,50 +32,40 @@ County1 <- c("Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobs
 City1 <- as.character(City1)
 City1 <- paste(City1, "Maine",sep = " ")
 Leahs1 <- cbind.data.frame(City1, County1)
-head(Leahs1)
 ```
 
 ```{r}
 Location1 <- geocode(City1)
-head(Location1)
 ```
 
 
 
 ```{r}
 Leahs2 <- cbind.data.frame(Leahs1, Location1)
-head(Leahs2)
 Leahs2 <- Leahs2 %>% mutate(Lat1 = jitter(lat), Lon1 = jitter(lon)) %>% select(City1,County1, Lat1, Lon1)
 Leahs2 <- Leahs2 %>% mutate(Lat11 = round(Lat1, digits = 2), Lon11 = round(Lon1, digits = 2)) %>% select(City1, County1, Lat11,Lon11 )
 Leahs2 <- Leahs2 %>% mutate(Lat37 = jitter(Lat11), Lon37 = jitter(Lon11)) %>% select(City1,County1, Lat37, Lon37)
-
-names(Leahs2)
 ```
 
 
 ```{r}
 a <- runif(98, 1.001, 1.002)
-# #
 b <- runif(98, 1.0001, 1.00018)
-# #
 ```
 
 
 ```{r}
 NewColumns <- cbind.data.frame(a, b)
 totalNewMaw <- cbind(Leahs2, NewColumns)
-head(totalNewMaw)
 ```
 
 
 ```{r}
 totalNewMap <- totalNewMaw %>% mutate(lat = jitter(Lat37), lng = jitter(Lon37)) %>% select(County1, lat, lng)
-head(totalNewMap)
 ```
 
 
 ```{r}
- 
 label1 <- paste("There are 18 clinics in Bangor, ME")
 label2 <- paste("There is 1 clinic in Belfast, ME")
 label3 <- paste("There is 1 clinic in Calais, ME")
@@ -108,9 +102,6 @@ AnotherNew <- leaflet() %>%  addProviderTiles("CartoDB.PositronNoLabels") %>%
   addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[94], lat = totalNewMap$lat[94], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label16) %>% 
   addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[97], lat = totalNewMap$lat[97], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label17) 
   
-  
-  
-  
-  AnotherNew
+AnotherNew
 ```
 
