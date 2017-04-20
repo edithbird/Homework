@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-	echo = FALSE,
+	echo = TRUE,
 	message = FALSE,
 	warning = FALSE
 )
@@ -65,7 +65,7 @@ totalNewMap <- totalNewMaw %>% mutate(lat = jitter(Lat37), lng = jitter(Lon37)) 
 ```
 
 
-```{r}
+```{r, fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
 label1 <- paste("There are 18 clinics in Bangor, ME")
 label2 <- paste("There is 1 clinic in Belfast, ME")
 label3 <- paste("There is 1 clinic in Calais, ME")
@@ -84,23 +84,23 @@ label15 <- paste("There is 1 clinic in Rumford, ME")
 label16 <- paste("There are 8 clinics in Skowhegan, ME")
 label17 <- paste("There are 3 clinic in Waterville, ME")
 AnotherNew <- leaflet() %>%  addProviderTiles("CartoDB.PositronNoLabels") %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[16], lat = totalNewMap$lat[16], radius = 13, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label1) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[19], lat = totalNewMap$lat[19], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label2) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[20], lat = totalNewMap$lat[20], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label3) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[21], lat = totalNewMap$lat[21], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label4) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[22], lat = totalNewMap$lat[22], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label5) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[24], lat = totalNewMap$lat[24], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label6) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[26], lat = totalNewMap$lat[26], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label7) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[44], lat = totalNewMap$lat[44], radius = 14, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label8) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[47], lat = totalNewMap$lat[47], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label9) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[57], lat = totalNewMap$lat[57], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label10) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[16], lat = totalNewMap$lat[16], radius = 23, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label1) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[19], lat = totalNewMap$lat[19], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label2) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[20], lat = totalNewMap$lat[20], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label3) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[21], lat = totalNewMap$lat[21], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label4) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[22], lat = totalNewMap$lat[22], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label5) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[24], lat = totalNewMap$lat[24], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label6) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[26], lat = totalNewMap$lat[26], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label7) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[44], lat = totalNewMap$lat[44], radius = 24, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label8) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[47], lat = totalNewMap$lat[47], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label9) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[57], lat = totalNewMap$lat[57], radius = 15, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label10) %>% 
   addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[59], lat = totalNewMap$lat[59], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label11) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[61], lat = totalNewMap$lat[61], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label12) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[74], lat = totalNewMap$lat[74], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label13) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[85], lat = totalNewMap$lat[85], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label14) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[87], lat = totalNewMap$lat[87], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label15) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[94], lat = totalNewMap$lat[94], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label16) %>% 
-  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[97], lat = totalNewMap$lat[97], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label17) 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[61], lat = totalNewMap$lat[61], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label12) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[74], lat = totalNewMap$lat[74], radius = 18, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label13) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[85], lat = totalNewMap$lat[85], radius = 19, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label14) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[87], lat = totalNewMap$lat[87], radius = 7, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label15) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[94], lat = totalNewMap$lat[94], radius = 15, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label16) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[97], lat = totalNewMap$lat[97], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label17) 
   
 AnotherNew
 ```
