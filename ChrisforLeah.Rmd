@@ -1,0 +1,116 @@
+---
+title: "Leahs"
+author: "Christine Iyer"
+date: "April 19, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(leaflet)
+library(rgdal)
+library(ggmap)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+
+```
+
+```{r}
+City1 <- c("Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Bangor","Belfast","Calais", "Damariscotta", "Dexter","Ellsworth","Ellsworth","Ellsworth","Farmington","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent","Fort Kent", "Houlton", "Houlton", "Houlton","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston","Lewiston", "Machias", "Machias", "Norway","Norway","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle","Presque Isle", "Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rockland","Rumford","Skowhegan","Skowhegan","Skowhegan","Skowhegan","Skowhegan","Skowhegan","Skowhegan","Skowhegan","Waterville","Waterville","Waterville")
+
+
+County1 <- c("Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Penobscot","Waldo", "Washington", "Lincoln", "Penobscot","Hancock","Hancock","Hancock","Franklin","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Androscoggin","Washington", "Washington", "Oxford", "Oxford", "Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Aroostook","Knox","Knox","Knox","Knox","Knox","Knox","Knox","Knox","Knox","Knox","Knox","Oxford", "Somerset","Somerset","Somerset","Somerset","Somerset","Somerset","Somerset","Somerset","Kennebec","Kennebec","Kennebec")
+City1 <- as.character(City1)
+City1 <- paste(City1, "Maine",sep = " ")
+Leahs1 <- cbind.data.frame(City1, County1)
+head(Leahs1)
+```
+
+```{r}
+Location1 <- geocode(City1)
+head(Location1)
+```
+
+
+
+```{r}
+Leahs2 <- cbind.data.frame(Leahs1, Location1)
+head(Leahs2)
+Leahs2 <- Leahs2 %>% mutate(Lat1 = jitter(lat), Lon1 = jitter(lon)) %>% select(City1,County1, Lat1, Lon1)
+Leahs2 <- Leahs2 %>% mutate(Lat11 = round(Lat1, digits = 2), Lon11 = round(Lon1, digits = 2)) %>% select(City1, County1, Lat11,Lon11 )
+Leahs2 <- Leahs2 %>% mutate(Lat37 = jitter(Lat11), Lon37 = jitter(Lon11)) %>% select(City1,County1, Lat37, Lon37)
+
+names(Leahs2)
+```
+
+
+```{r}
+a <- runif(98, 1.001, 1.002)
+# #
+b <- runif(98, 1.0001, 1.00018)
+# #
+```
+
+
+```{r}
+NewColumns <- cbind.data.frame(a, b)
+totalNewMaw <- cbind(Leahs2, NewColumns)
+head(totalNewMaw)
+```
+
+
+```{r}
+totalNewMap <- totalNewMaw %>% mutate(lat = jitter(Lat37), lng = jitter(Lon37)) %>% select(County1, lat, lng)
+head(totalNewMap)
+```
+
+
+```{r}
+ 
+label1 <- paste("There are 18 clinics in Bangor, ME")
+label2 <- paste("There is 1 clinic in Belfast, ME")
+label3 <- paste("There is 1 clinic in Calais, ME")
+label4 <- paste("There is 1 clinic in Damariscotta, ME")
+label5 <- paste("There is 1 clinic in Dexter, ME")
+label6 <- paste("There are 3 clinics in Ellsworth, ME")
+label7 <- paste("There is 1 clinic in Farmington, ME")
+label8 <- paste("There are 19 clinics in Fort Kent, ME")
+label9 <- paste("There are 3 clinics in Houlton, ME")
+label10 <- paste("There are 10 clinics in Lewiston, ME")
+label11 <- paste("There are 2 clinics in Machias, ME")
+label12 <- paste("There are 2 clinics in Norway, ME")
+label13 <- paste("There are 13 clinics in Presque Isle, ME")
+label14 <- paste("There are 11 clinics in Rockland, ME")
+label15 <- paste("There is 1 clinic in Rumford, ME")
+label16 <- paste("There are 8 clinics in Skowhegan, ME")
+label17 <- paste("There are 3 clinic in Waterville, ME")
+AnotherNew <- leaflet() %>%  addProviderTiles("CartoDB.PositronNoLabels") %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[16], lat = totalNewMap$lat[16], radius = 13, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label1) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[19], lat = totalNewMap$lat[19], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label2) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[20], lat = totalNewMap$lat[20], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label3) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[21], lat = totalNewMap$lat[21], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label4) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[22], lat = totalNewMap$lat[22], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label5) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[24], lat = totalNewMap$lat[24], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label6) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[26], lat = totalNewMap$lat[26], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label7) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[44], lat = totalNewMap$lat[44], radius = 14, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label8) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[47], lat = totalNewMap$lat[47], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label9) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[57], lat = totalNewMap$lat[57], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label10) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[59], lat = totalNewMap$lat[59], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label11) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[61], lat = totalNewMap$lat[61], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label12) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[74], lat = totalNewMap$lat[74], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label13) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[85], lat = totalNewMap$lat[85], radius = 11, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label14) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[87], lat = totalNewMap$lat[87], radius = 8, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label15) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[94], lat = totalNewMap$lat[94], radius = 10, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label16) %>% 
+  addCircleMarkers(data = totalNewMap, lng = totalNewMap$lng[97], lat = totalNewMap$lat[97], radius = 9, stroke = FALSE, fillOpacity = 0.5, color = "#ff0000", popup = label17) 
+  
+  
+  
+  
+  AnotherNew
+```
+
